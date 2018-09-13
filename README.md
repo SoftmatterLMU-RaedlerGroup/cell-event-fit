@@ -52,6 +52,10 @@ The input CSV files must use the default Matlab formatting, which is a `.` as de
 XLS(X) has not been used and tested as thoroughly as CSV.
 Moreover, the behaviour may be platform specific.
 
+There is [example data](https://doi.org/10.5281/zenodo.1418377) available.
+To use it, download one of the ZIP files and extract it.
+The example data for fitting is below the directory `Raw`.
+
 
 ### Interactive mode
 The interactive mode requires that Matlab can display figure windows.
