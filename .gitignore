@@ -1,0 +1,12 @@
+project/**/*
+*~
+*.swp
+.*.swp
+*.m~
+*.asv
+!*.m
+*.pdf
+*.csv
+*.xls
+*.xlsx
+
