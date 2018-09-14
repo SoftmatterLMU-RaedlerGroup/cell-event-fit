@@ -56,6 +56,11 @@ Moreover, the behaviour may be platform specific.
 There is [example data](https://doi.org/10.5281/zenodo.1418377) available.
 To use it, download one of the ZIP files and extract it.
 The example data for fitting is below the directory `Raw`.
+Note, however, that when using example data from `Data_Huh7.zip`, the value of `min_breakdown_amp` in [postproc_kink.m](postprocessing/postproc_kink.m) should be changed in order to account for the different behaviour of Huh7 cells:
+```diff
+- min_breakdown_amp = .1 * R.amplitude;
++ min_breakdown_amp = .2 * R.amplitude;
+```
 
 
 ### Interactive mode
