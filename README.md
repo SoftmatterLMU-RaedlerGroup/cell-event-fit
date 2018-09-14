@@ -1,4 +1,5 @@
 # Single-cell fluorescence trace fitting
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1418465.svg)](https://doi.org/10.5281/zenodo.1418465)
 
 This repository provides code for fitting model functions to single-cell
 fluorescence time traces using multistart maximum-likelihood fitting.
