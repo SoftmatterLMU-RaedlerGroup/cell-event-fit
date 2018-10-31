@@ -10,14 +10,10 @@ This program requires Matlab in a recent version. It was developed and
 employed in R2016b and R2017a. However, other versions may work as well.
 
 To install the program, clone the repository to a place accessible to
-Matlab, and add the following directories to your Matlab path:
-* the base directory (which contains this README file)
-* `from_PESTO`
-* `postprocessing`
-* `preprocessing`
-* `simulation`
+Matlab.
 
-Then, the program should work.
+To ensure that all necessary scripts are on your Matlab path,
+run the `install_apoptosis_fit` function.
 
 Note that the files in this repository use the UTF-8 encoding.
 If your copy of Matlab is not configured to use UTF-8, some characters
