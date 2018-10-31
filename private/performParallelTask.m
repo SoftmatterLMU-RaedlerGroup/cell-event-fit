@@ -48,10 +48,8 @@ parfor i = 1:ntraces
 	data_indices = [];
 
 	%% Do marker-specific pre-processing
-	if strcmp(model.name, 'pSIVA_old') || strcmp(model.name, 'pSIVA')
-		% For pSIVA, only fit to the minimum after the first peak if
-		% there are two large peaks
-		data_indices = preproc_psiva(mf.data(1:mf.data_len(file_ind,1),i));
+	if isa(model.preproc, 'function_handle')
+		data_indices = model.preproc(mf.data(1:mf.data_len(file_ind,1),i));
 	end
 
 	% Define data range to be fitted (Default: fit whole data)

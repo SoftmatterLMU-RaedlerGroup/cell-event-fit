@@ -1,8 +1,8 @@
-function data_index = preproc_psiva(data)
-%preproc_psiva contains the preprocessing routine for the pSIVA signal.
+function data_index = preproc_cal520(data)
+%preproc_cal520 contains the preprocessing routine for the Cal520 signal.
 %
-% For pSIVA, only fit to the minimum after the first peak if
-% there are two large peaks
+% The signal may contain an outlier (low value) at the first point.
+% Exclude such a point from fitting.
 %
 % Required variables:
 % ===================
@@ -11,9 +11,6 @@ function data_index = preproc_psiva(data)
 % Provided variables:
 % ===================
 % data_index		indices of datapoints to be used for fitting
-%
-% The goal of this preprocessing is to only fit up to the minimum
-% after the first peak (if there are several peaks).
 %
 % HINTS:
 % 1.	Due to parallelization errors, "data" must only be the vector of
@@ -36,29 +33,18 @@ function data_index = preproc_psiva(data)
 % You should have received a copy of the GNU General Public License
 % along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-% Get the amplitude of the signal
-amplitude = max(data) - min(data);
+% Set threshold for excluding first point
+thresh = 5;
 
-% Define minimum prominence (peaks below this level will be ignored)
-min_peak_prom = amplitude * 0.7;
+% Get difference between first and second point
+init_diff = data(2) - data(1);
 
-% Get indices and prominences of the two most prominent peaks
-% (actually we get all peaks, but we only need the two largest)
-[~,peak_loc,peak_wid,peak_prom] = findpeaks(data, ...
-							'SortStr', 'descend', ...
-							'WidthReference', 'halfprom');
+% Get difference between 
+consec_diff = abs(data(3) - data(2));
 
-if peak_prom(1) >= min_peak_prom && ...
-		( peak_prom(2) >= .15 * peak_prom(1) || peak_wid(2) >= .15 * peak_wid(1) )
-	% There are two large peaks => find the minimum in between
-	if peak_loc(1) < peak_loc(2)
-		[~,latest_t] = min(data( peak_loc(1) : peak_loc(2)));
-	else
-		[~,latest_t] = min(data( peak_loc(2) : peak_loc(1)));
-	end
-
-	% Fit the data only until to the minimum after first peak
-	data_index = 1:latest_t;
+% Compare to threshold and return corresponding index array
+if init_diff > thresh * consec_diff
+	data_index = 2:length(data);
 else
 	data_index = [];
 end

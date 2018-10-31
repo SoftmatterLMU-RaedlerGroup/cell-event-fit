@@ -8,6 +8,7 @@ function model = model_definitions(modelname)
 %			marker:		The human readable marker name
 %			simulate:	The simulation function
 %			postproc:	The postprocessing routine
+%			preproc:	A preprocessing routine (optional)
 %			par_num:	The number of parameters
 %			par_min:	Vector of the minimum values the parameters can take
 %			par_max:	Vector of the maximum values the parameters can take
@@ -29,7 +30,8 @@ function model = model_definitions(modelname)
 % along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 %% Allocate model structure
-model = struct('name',[], 'marker',[], 'simulate',[], 'postproc',[], ...
+model = struct('name',[], 'marker',[], ...
+	'simulate',[], 'postproc',[], 'preproc',false, ...
 	'par_num',0, 'par_min',[], 'par_max',[], 'par_names',[]);
 
 %% Populate model structure
@@ -51,6 +53,7 @@ elseif strcmpi(modelname, 'pSIVA')
 	model.marker = 'pSIVA';
 	model.simulate = @LATE_simulate;
 	model.postproc = @postproc_LATE_extrapol;
+	model.preproc = @preproc_psiva;
 	model.par_num = 7;
 	model.par_min = [-6,-4,-4,-4,-4,-2,-4];
 	model.par_max = [+4,+4,+4,+4,+4,+3,+4];
@@ -120,6 +123,7 @@ elseif regexpi(modelname, '^cal(?:cium)?(?:520)?')
 	model.marker = 'Cal520';
 	model.simulate = @LATE_decay_simulate;
 	model.postproc = @postproc_LATE_decay;
+	model.preproc = @preproc_cal520;
 	model.par_num = 10;
 	model.par_min = [-3,-2,-3,-2,-1,-3,-3,-2,-2,-3];
 	model.par_max = [+3,+4,+4,+4,+2,+3,+3,+2,+2,+3];
