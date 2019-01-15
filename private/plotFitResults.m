@@ -137,7 +137,7 @@ elseif ~is_start_defined
 				continue
 			end
 			for d2 = dir(fullfile(d.folder, d.name))'
-				if ~strcmp(d2.name(1), '.')
+				if ~d2.isdir && regexpi(d2.name, '^[^.].*\.(?:csv|pdf)$')
 					is_content_found = true;
 					break
 				end

@@ -133,7 +133,7 @@ fit_apoptosis(model, file_paths, out_path, run_options, export_options)
    * `TimeScale`: the value with which to multiply the time values read
       from the data files to convert them into hours. By default, the time
 	  scaling is recognized by the function `get_t_scale` in the file
-	  [private/scalte_t.m](private/scale_t.m).
+	  [private/scale_t.m](private/scale_t.m).
    * `TimeOffset`: a value added to the time values, in hours. Default is 0.
 
 * `export_options` are options for controlling what output files are
@@ -180,19 +180,29 @@ To create the output files, call `fit_apoptosis_output` with the path to
 the `TEMP_<hhmm>.mat` file as argument. Then, the prepared output directory
 will be populated with the output files.
 
-Note that `fit_apoptosis_output` currently does not create directories but
-requires that the output directories already exist. Moreover, the output
+Note that the output
 directories are saved as absolute paths. When copying the temporary file
 to another computer for plotting, the path names must be the same on both
-computers. It is recommended to use (in Linux) the tilde to denote the home
+computers. For Linux users, it is recommended to use the tilde to denote the home
 directory of the current user for specifying the output directory.
 
-Since sporadic Matlab crashes were encountered during plotting, `fit_apoptosis_output` accepts a second parameter, `loop_start`, to resume exporting where it had stopped before.
-During plotting, the index of the trace or file whose data are currently exported is written to the temporary file `plot.log`.
-If Matlab has crashed during exporting, set `loop_start` to the trace number indicated in `plot.log`.
-If `plot.log` indicates a file number, set the first element of `loop_start` to `NaN` to skip exporting single trace data and set the second element to the trace number.
+Since sporadic Matlab crashes were encountered during plotting, the index
+of the trace or file whose data are currently exported is written to the temporary file `plot.log`.
+From there, it is automatically recovered when `fit_apoptosis_output` is called
+again after a crash, and plotting/exporting is resumed where it had stopped before.
+
+However, if no `plot.log` file is found but the output directories contain CSV or PDF files,
+an error is thrown since you might be overwriting already exported files.
+In this case, the index of the trace or file at which exporting should be
+started must be specified manually by setting `loop_start`,
+the second (and optional) parameter of `fit_apoptosis_output`,
+to the trace number indicated in `plot.log`.
+If `plot.log` indicates a file number, `loop_start` should be a vector with `NaN`
+as its first element to skip exporting single trace data, and with the
+trace number as its second element.
 (The single trace data are exported before file data.
-Hence, if Matlab crashes during exporting file data, the single trace data has already been exported an needn’t be re-exported.)
+Hence, if Matlab crashes during exporting file data, the single trace data
+has already been exported an needn’t be re-exported.)
 
 
 ### Output files
