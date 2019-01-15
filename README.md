@@ -333,3 +333,29 @@ To implement custom models, the following changes are necessary:
 That’s all.
 Now your custom model is readily set up for use.
 
+
+### Filtering data before fitting
+Real data may contain undefined signatures which may interefere with fitting.
+Therefore, it may be desirable to fit only parts of the traces that do not contain undefined signatures.
+
+This can be done by defining a preprocessing function for a model.
+Preprocessing functions are, by convention, saved in the directory `preprocessing`,
+and they must accept three arguments (however, you are free to ignore them):
+
+* The first argument is a vector of the raw data read from the file.
+   It can be used to identify an undefined signature.
+
+* The second argument is a handle to the matfile holding all data.
+   It can be used to obtain any information about the data.
+   This allows access to e.g. the index of a trace or file, or the file name.
+
+* The third argument is the (global) trace index.
+   It uniquely identifies the current trace in the current session.
+   It can be used for reading the corresponding array elements from the matfile handle.
+
+The preprocessing function must return, as its only output argument, a vector holding
+the indices of data points for use in fitting, in ascending order.
+When an empty array is returned, all data points are used for fitting.
+
+To activate the preprocessing function for a model, write a function handle of the preprocessing function
+to the `model.preproc` field in the [model definition](model_definitions.m).

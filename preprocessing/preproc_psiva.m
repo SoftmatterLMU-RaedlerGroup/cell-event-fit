@@ -1,4 +1,4 @@
-function data_index = preproc_psiva(data)
+function data_index = preproc_psiva(data, ~, ~)
 %preproc_psiva contains the preprocessing routine for the pSIVA signal.
 %
 % For pSIVA, only fit to the minimum after the first peak if
@@ -21,7 +21,7 @@ function data_index = preproc_psiva(data)
 % 2.	If an empty vector is returned, it will automatically be
 %		populated with all indices of the whole track.
 %
-% Copyright © 2018 Daniel Woschée <daniel.woschee@physik.lmu.de>
+% Copyright © 2018-2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
 % Faculty of Physics / Ludwig-Maximilians-Universität München
 %
 % This program is free software; you can redistribute it and/or modify

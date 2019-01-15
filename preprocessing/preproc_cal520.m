@@ -1,4 +1,4 @@
-function data_index = preproc_cal520(data)
+function data_index = preproc_cal520(data, ~, ~)
 %preproc_cal520 contains the preprocessing routine for the Cal520 signal.
 %
 % The signal may contain an outlier (low value) at the first point.
@@ -18,7 +18,7 @@ function data_index = preproc_cal520(data)
 % 2.	If an empty vector is returned, it will automatically be
 %		populated with all indices of the whole track.
 %
-% Copyright © 2018 Daniel Woschée <daniel.woschee@physik.lmu.de>
+% Copyright © 2018-2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
 % Faculty of Physics / Ludwig-Maximilians-Universität München
 %
 % This program is free software; you can redistribute it and/or modify

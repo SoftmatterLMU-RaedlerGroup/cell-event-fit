@@ -49,7 +49,9 @@ parfor i = 1:ntraces
 
 	%% Do marker-specific pre-processing
 	if isa(model.preproc, 'function_handle')
-		data_indices = model.preproc(mf.data(1:mf.data_len(file_ind,1),i));
+		data_indices = model.preproc( ...
+			mf.data(1:mf.data_len(file_ind,1),i), ...
+			mf, i);
 	end
 
 	% Define data range to be fitted (Default: fit whole data)
@@ -58,8 +60,14 @@ parfor i = 1:ntraces
 	end
 
 	%% Perform the actual fit
+	% Get data points for fitting
+	mf_data = mf.data(1:mf.data_len(file_ind, 1), i);
+	mf_data = mf_data(data_indices);
+	mf_t = mf.t(1:mf.data_len(file_ind, 1), mf.t_ind(file_ind, 1));
+	mf_t = mf_t(data_indices);
+
 	% Get parameters
-	[params,logPost] = do_fitting(model, mf.t(data_indices,mf.t_ind(file_ind,1)), mf.data(data_indices,i) );
+	[params,logPost] = do_fitting(model, mf_t, mf_data);
 
 	% Calculate real parameters (not logarithmic ones)
 	params = 10 .^ params;
