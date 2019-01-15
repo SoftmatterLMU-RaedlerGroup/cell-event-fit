@@ -1,4 +1,4 @@
-function data_index = preproc_cal520(data, ~, ~)
+function data_index = preproc_cal520(data, mf, trace_ind)
 %preproc_cal520 contains the preprocessing routine for the Cal520 signal.
 %
 % The signal may contain an outlier (low value) at the first point.
@@ -7,6 +7,8 @@ function data_index = preproc_cal520(data, ~, ~)
 % Required variables:
 % ===================
 % data				vector of measured data
+% mf				matfile handle for further information
+% trace_ind			index of trace in `mf`
 % 
 % Provided variables:
 % ===================
@@ -33,18 +35,27 @@ function data_index = preproc_cal520(data, ~, ~)
 % You should have received a copy of the GNU General Public License
 % along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+file_ind = mf.file_ind(trace_ind, 1);
+data_index = 1:mf.data_len(file_ind, 1);
+
+% Check for measurement 20181130
+% In measurement 20181130, a systematic transient dip occurs
+% for all traces during time points 12 and 13. Exclude those points.
+file_name = mf.name_F(mf.name_F_ind(file_ind, 1), 1:mf.name_F_len(file_ind, 1));
+if regexpi(file_name, '^\d+_\d+_20181130$')
+	data_index = [data_index(1:11) data_index(14:end)];
+end
+
 % Set threshold for excluding first point
 thresh = 5;
 
 % Get difference between first and second point
-init_diff = data(2) - data(1);
+init_diff = data(data_index(2)) - data(data_index(1));
 
 % Get difference between 
-consec_diff = abs(data(3) - data(2));
+consec_diff = abs(data(data_index(3)) - data(data_index(2)));
 
 % Compare to threshold and return corresponding index array
 if init_diff > thresh * consec_diff
-	data_index = 2:length(data);
-else
-	data_index = [];
+	data_index = data_index(2:end);
 end
