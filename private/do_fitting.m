@@ -1,4 +1,4 @@
-function [varargout] = do_fitting(model, t, data, varargin)
+function [varargout] = do_fitting(model, t, data)
 %do_fitting configures the multistart optimization
 %
 % Input parameters
@@ -11,7 +11,6 @@ function [varargout] = do_fitting(model, t, data, varargin)
 %   model.par_min			array of minimum values for fitting parameters
 % t						time vector
 % data					data vector
-% varargin{1}			are parameters given logarithmically? (0: no, 1: yes)
 %
 % Output parameters
 % =================
@@ -19,7 +18,7 @@ function [varargout] = do_fitting(model, t, data, varargin)
 % logPost		logarithm of posterior
 % toc			computation time needed for fitting
 %
-% Copyright © 2018 Daniel Woschée <daniel.woschee@physik.lmu.de>
+% Copyright © 2018-2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
 % Faculty of Physics / Ludwig-Maximilians-Universität München
 %
 % This program is free software; you can redistribute it and/or modify
@@ -44,12 +43,7 @@ options.fmincon = optimset('algorithm', 'interior-point', ...
 options.n_starts = 100; % or 150
 options.plot = 'false';	% 'true','hidden'
 options.mode = 'silent';
-
-if numel(varargin) >= 1     % logarithmic parameters?
-    options.logPost_options.logpar = varargin{1};
-else
-	options.logPost_options.logpar = 1;		% Per default: yes
-end
+options.logPost_options.logpar = model.par_log; % logarithmic parameters?
 
 % Profile likelihood options
 %options_PL.fmincon = options.fmincon;

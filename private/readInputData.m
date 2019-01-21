@@ -22,7 +22,7 @@ function [ Ffile ] = readInputData(varargin)
 %	TimeOffset		Numeric vector to be added to time vector (in TimeUnit)
 %					(one global value or vector with an entry per data file)
 %
-% Copyright © 2018 Daniel Woschée <daniel.woschee@physik.lmu.de>
+% Copyright © 2018-2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
 % Faculty of Physics / Ludwig-Maximilians-Universität München
 %
 % This program is free software; you can redistribute it and/or modify
@@ -434,6 +434,14 @@ for f = 1:ndatafiles
 	name_F_len(f,1) = length(temp_name);
 	[extension_F, extension_F_ind(f)] = mssina(extension_F, temp_ext);
 
+	% Save model name
+	[model_name, model_name_ind(f)] = mssina(model_name, models(model_ind(f)).name);
+	model_name_len(f) = length(models(model_ind(f)).name);
+
+	if models(model_ind(f)).par_num > max_par_num
+		max_par_num(1) = models(model_ind(f)).par_num;
+	end
+
 	% Load data from data file
 	if strcmpi(temp_ext, '.csv') || strcmpi(temp_ext, '.txt')
 		indata = csvread(full_path(full_path_ind(f),:));
@@ -451,9 +459,11 @@ for f = 1:ndatafiles
 	size_F(f) = size(indata, 2) - 1;
 
 	% Ensure that data does not contain negative values
-	data_offset = min(min( indata(:,2:end) ));
-	if data_offset < 0
-		indata(:,2:end) = indata(:,2:end) - data_offset;
+	if models(model_ind(f)).normalize_offset
+		data_offset = min(min( indata(:,2:end) ));
+		if data_offset < 0
+			indata(:,2:end) = indata(:,2:end) - data_offset;
+		end
 	end
 
 	% Compare lengths of data array and current data
@@ -527,9 +537,6 @@ for f = 1:ndatafiles
 	end
 	clear temp_t_sim;
 
-	% Define model
-	%model_ind(f) = 1; % By now only one model per run is supported
-
 	% Prepare target directory
 	if length(out_dir) > 1
 		f_out = f;
@@ -545,14 +552,6 @@ for f = 1:ndatafiles
 	% Prepare format string for cell number in files
 	[format_cell_number, format_cell_number_ind(f)] = mssina( ...
 		format_cell_number, [ '%0' num2str( floor(log10(single(size_F(f)))) + 1 ) 'd' ]);
-
-	% Save model name
-	[model_name, model_name_ind(f)] = mssina(model_name, models(model_ind(f)).name);
-	model_name_len(f) = length(models(model_ind(f)).name);
-
-	if models(model_ind(f)).par_num > max_par_num
-		max_par_num(1) = models(model_ind(f)).par_num;
-	end
 
 	% Allocate memory for array of trace indices
 	if size(dataindices, 2) < size_F(f)

@@ -1,7 +1,7 @@
 function [logPost_best, par_best] = performOptimization(parameters, logPosterior, options)
 %performOptimization performs the multistart optimization
 %
-% Copyright © 2018 Daniel Woschée <daniel.woschee@physik.lmu.de>
+% Copyright © 2018-2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
 % Faculty of Physics / Ludwig-Maximilians-Universität München
 %
 % This program is free software; you can redistribute it and/or modify
@@ -37,6 +37,8 @@ end
 
 if ~isfield(parameters, 'guess')
 	parameters.guess = [];
+elseif size(parameters.guess, 2) > options.n_starts
+	options.n_starts = size(parameters.guess, 2);
 end
 
 %% Sampling of starting points

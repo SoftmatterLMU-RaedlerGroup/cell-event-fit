@@ -6,7 +6,7 @@ function [ Ffile ] = performParallelTask( Ffile, ntraces )
 % Ffile		String containing the path of the input mat-file
 % ntraces	The number of traces to be processed
 %
-% Copyright © 2018 Daniel Woschée <daniel.woschee@physik.lmu.de>
+% Copyright © 2018-2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
 % Faculty of Physics / Ludwig-Maximilians-Universität München
 %
 % This program is free software; you can redistribute it and/or modify
@@ -70,7 +70,13 @@ parfor i = 1:ntraces
 	[params,logPost] = do_fitting(model, mf_t, mf_data);
 
 	% Calculate real parameters (not logarithmic ones)
-	params = 10 .^ params;
+	if any(model.par_log)
+		if length(model.par_log) == 1
+			params = 10 .^ params;
+		else
+			params(model.par_log) = 10 .^ params(model.par_log);
+		end
+	end
 
 	% Ensure that params vector has right dimensions
 	if iscolumn(params)
@@ -80,7 +86,7 @@ parfor i = 1:ntraces
 	% Evaluate fitted function
 	data_sim = model.simulate(mf.t_sim(1:mf.data_sim_len(file_ind,1),mf.t_sim_ind(file_ind,1)), params);
 
-	if isfield(model, 'postproc')
+	if isfield(model, 'postproc') && isa(model.postproc, 'function_handle')
 		% Determine extrema and amplitude of fit
 		[max_val, max_ind] = max(data_sim);
 		[min_val, min_ind] = min(data_sim);
@@ -158,6 +164,7 @@ parfor i = 1:ntraces
 		t_event = NaN;
 		event_deriv = NaN;
 		fit_parabola = [];
+		fit_type = NaN;
 		rising_edge_xoff = NaN;
 		rising_edge_yoff = NaN;
 		rising_edge_scale = NaN;

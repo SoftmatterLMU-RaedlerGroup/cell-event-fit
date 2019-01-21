@@ -13,9 +13,8 @@ function logL = logLik(model, theta, t, D, varargin)
 % t         Vector of timepoints
 % D         Vector of measured data (single cell)
 % options   Optional option struct
-% max_ind	Maximum index to be evaluated
 %
-% Copyright © 2018 Daniel Woschée <daniel.woschee@physik.lmu.de>
+% Copyright © 2018-2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
 % Faculty of Physics / Ludwig-Maximilians-Universität München
 %
 % This program is free software; you can redistribute it and/or modify
@@ -41,25 +40,22 @@ options.grad_ind = (1:length(theta))';
 options.dist = 'normal'; % alternative: 'log-normal'; not implemented yet
 options.logpar = 1; % 1: take 10^params, 0: take params
 
-if nargin > 4
-    options = setdefault(varargin{1},options);
+if numel(varargin) > 0
+    options = setdefault(varargin{1}, options);
 end
 
-% If options.logpar == true, consider theta as logarithmic values
-if options.logpar
-    theta = 10 .^ theta;
+% If options.logpar == true, consider theta as logarithmic values.
+% options.logpar can be a vector holding a logical value for each parameter
+if any(options.logpar)
+	if length(options.logpar) == 1
+		theta = 10 .^ theta;
+	else
+		theta(options.logpar) = 10 .^ theta(options.logpar);
+	end
 end
 
 % Calculate values for given parameters
 Y = model.simulate(t, theta);
-
-% If a maximum index is given, evaluate logL only up to that index
-if nargin > 5 && varargin{2} > 0
-    max_ind = varargin{2};
-
-    D = D(1:max_ind,:);
-    Y = Y(1:max_ind,:);
-end
 
 %% Evaluation of likelihood function
 sigma = theta(end); % non-system parameter (variance)
