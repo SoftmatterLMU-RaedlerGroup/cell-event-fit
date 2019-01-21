@@ -39,6 +39,7 @@ options.sign = 'negative';
 options.grad_ind = (1:length(theta))';
 options.dist = 'normal'; % alternative: 'log-normal'; not implemented yet
 options.logpar = 1; % 1: take 10^params, 0: take params
+options.weights = struct('type', 'const', 'value', 1);
 
 if numel(varargin) > 0
     options = setdefault(varargin{1}, options);
@@ -58,11 +59,16 @@ end
 Y = model.simulate(t, theta);
 
 %% Evaluation of likelihood function
-sigma = theta(end); % non-system parameter (variance)
+switch options.weights.type
+	case 'const'
+		sigma = options.weights.value;
+	case 'parameter'
+		sigma = theta(options.weights.value);
+end
 
 % Log-likelihood:
 % log of gaussian distribution
-logL = 1/2 * sum( log(2*pi*sigma^2) + ((D - Y) ./ sigma).^2 );
+logL = 1/2 * sum( log(2*pi*sigma.^2) + ((D - Y) ./ sigma).^2 );
 
 if isnan(logL)
     logL = inf;

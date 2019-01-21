@@ -6,12 +6,15 @@ function model = model_definitions(modelname)
 % Output:	A struct with the model properties with these fields:
 %			name:		The internal name of the model
 %			marker:		The human readable marker name
+%			normalize_offset: Logical indicator for offset normalization
 %			simulate:	The simulation function
 %			postproc:	The postprocessing routine
 %			preproc:	A preprocessing routine (optional)
 %			par_num:	The number of parameters
 %			par_min:	Vector of the minimum values the parameters can take
 %			par_max:	Vector of the maximum values the parameters can take
+%			weights:	Weights of the data points
+%			par_log:	Logical or index vector for logarithmic parameters
 %			par_names:	Names of the parameters (used on MS plots)
 %
 % Copyright © 2018-2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
@@ -32,7 +35,7 @@ function model = model_definitions(modelname)
 %% Allocate model structure
 model = struct('name',[], 'marker',[], 'normalize_offset',false, ...
 	'simulate',[], 'postproc',false, 'preproc',false, ...
-	'par_num',0, 'par_min',[], 'par_max',[], ...
+	'par_num',0, 'par_min',[], 'par_max',[], 'weights',[], ...
 	'par_log',false, 'par_names',[]);
 
 %% Populate model structure
@@ -48,6 +51,7 @@ if regexpi(modelname, '^casp(?:a(?:s(?:e)?)?)?')
 	model.par_min = [-6,-4,-4,-4,-4,-2,-4];
 	model.par_max = [+4,+4,+4,+4,+4,0,+4];
 	model.par_log = true;
+	model.weights = struct('parameter', 7);
 	model.par_names = {'A';'B';'t_0';'\alpha';'\gamma';'b';'\sigma'};
 
 elseif strcmpi(modelname, 'pSIVA')
@@ -62,6 +66,7 @@ elseif strcmpi(modelname, 'pSIVA')
 	model.par_min = [-6,-4,-4,-4,-4,-2,-4];
 	model.par_max = [+4,+4,+4,+4,+4,+3,+4];
 	model.par_log = true;
+	model.weights = struct('parameter', 7);
 	model.par_names = {'A';'B';'t_0';'\alpha';'\gamma';'b';'\sigma'};
 
 elseif strcmpi(modelname, 'pi')
@@ -75,6 +80,7 @@ elseif strcmpi(modelname, 'pi')
 	model.par_min = [-6,-4,-4,-2,-2,-2,-4];
 	model.par_max = [+4,+4,+4,+1,+2,+3,+4];
 	model.par_log = true;
+	model.weights = struct('parameter', 7);
 	model.par_names = {'A';'B';'t_0';'\alpha';'\gamma';'b';'\sigma'};
 
 elseif regexpi(modelname, '^(:?cell ?)?ro(?:s|x)$')
@@ -88,6 +94,7 @@ elseif regexpi(modelname, '^(:?cell ?)?ro(?:s|x)$')
 	model.par_min = [-6,-4,-4,-4,-4,-4,-4];
 	model.par_max = [+4,+4,+4,+4,+4,+4,+4];
 	model.par_log = true;
+	model.weights = struct('parameter', 7);
 	model.par_names = {'a_\text{const}';'a_\text{quad}';'t_\text{vertex}'; ...
 		't_\text{step}';'\gamma';'b';'\sigma'};
 
@@ -102,6 +109,7 @@ elseif regexpi(modelname, '^Lyso(:?Tracker)?$')
 	model.par_min = [-6,-4,-4,-4,-4,-4,-4];
 	model.par_max = [+4,+4,+4,+4,+4,+4,+4];
 	model.par_log = true;
+	model.weights = struct('parameter', 7);
 	model.par_names = {'a_\text{const}';'a_\text{quad}';'t_\text{vertex}'; ...
 		't_\text{step}';'\gamma';'b';'\sigma'};
 
@@ -116,6 +124,7 @@ elseif regexpi(modelname, '^TMRM(?:_var(?:iable)?)?$')
 	model.par_min = [-6,-4,-1,-4,-4,-2,-4,-4];
 	model.par_max = [+4,+4,+1,+4,+4,+2,+4,+4];
 	model.par_log = true;
+	model.weights = struct('parameter', 8);
 	model.par_names = {'a_\text{const}';'|a_\text{quad}|';'sign(a_\text{quad})'; ...
 		't_\text{vertex}';'t_\text{step}';'\gamma';'b';'\sigma'};
 
@@ -130,6 +139,7 @@ elseif strcmpi(modelname, 'mRNA')
 	model.par_min = [-4,-6,-6,-6,-6,-6];
 	model.par_max = [+4,+6,+6,+6,+6,+6];
 	model.par_log = true;
+	model.weights = struct('parameter', 6);
 	model.par_names = {'\text{os}';'\text{sc}';'\delta';'\beta';'t_0';'\sigma'};
 	
 elseif regexpi(modelname, '^cal(?:cium)?(?:520)?')
@@ -144,6 +154,7 @@ elseif regexpi(modelname, '^cal(?:cium)?(?:520)?')
 	model.par_min = [-3,-2,-3,-2,-1,-3,-3,-2,-2,-3];
 	model.par_max = [+3,+4,+4,+4,+2,+3,+3,+2,+2,+3];
 	model.par_log = true;
+	model.weights = struct('parameter', 10);
 	model.par_names = {'C_0';'C_0^\text{amp}';'A';'B';'t_0';'a_1';'a_2';'b_1';'b_2';'\sigma'};
 
 else

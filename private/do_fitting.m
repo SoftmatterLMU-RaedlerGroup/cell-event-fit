@@ -45,6 +45,27 @@ options.plot = 'false';	% 'true','hidden'
 options.mode = 'silent';
 options.logPost_options.logpar = model.par_log; % logarithmic parameters?
 
+% Data weights
+weights = struct('type', 'const', 'value', true);
+if isnumeric(model.weights)
+	switch length(model.weights)
+		case length(data)
+			weights.value = model.weights;
+		case 1
+			weights.value = repmat(model.weights, length(data), 1);
+		otherwise
+			error('Model weights have bad length; expected 1 or %d.', length(data));
+	end
+elseif isstruct(model.weights) && isfield(model.weights, 'parameter')
+	weights.type = 'parameter';
+	weights.value = model.weights.parameter;
+elseif isa(model.weights, 'function_handle')
+	weights.value = model.weights(data, t);
+else
+	weights.value = sqrt(data - min(data) + 1);
+end
+options.logPost_options.weights = weights;
+
 % Profile likelihood options
 %options_PL.fmincon = options.fmincon;
 
