@@ -15,6 +15,8 @@ function model = model_definitions(modelname)
 %			par_max:	Vector of the maximum values the parameters can take
 %			weights:	Weights of the data points
 %			par_log:	Logical or index vector for logarithmic parameters
+%			guess:		Set of initial parameter values (optional)
+%			par_fun:	Function handle for setting `par_min`, `par_max`, `guess`
 %			par_names:	Names of the parameters (used on MS plots)
 %
 % Copyright © 2018-2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
@@ -32,11 +34,11 @@ function model = model_definitions(modelname)
 % You should have received a copy of the GNU General Public License
 % along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-%% Allocate model structure
+%% Initialize model structure
 model = struct('name',[], 'marker',[], 'normalize_offset',false, ...
 	'simulate',[], 'postproc',false, 'preproc',false, ...
 	'par_num',0, 'par_min',[], 'par_max',[], 'weights',[], ...
-	'par_log',false, 'par_names',[]);
+	'par_log',false, 'guess',[], 'par_fun',[], 'par_names',[]);
 
 %% Populate model structure
 

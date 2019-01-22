@@ -57,6 +57,10 @@ if isnumeric(model.weights)
 			error('Model weights have bad length; expected 1 or %d.', length(data));
 	end
 elseif isstruct(model.weights) && isfield(model.weights, 'parameter')
+	% DO NOT USE THIS OPTION!
+	% Estimating the weights together with the parameters is bad practice.
+	% This functionality is only kept for historical reasons
+	% and might eventually be removed.
 	weights.type = 'parameter';
 	weights.value = model.weights.parameter;
 elseif isa(model.weights, 'function_handle')
@@ -66,14 +70,33 @@ else
 end
 options.logPost_options.weights = weights;
 
-% Profile likelihood options
-%options_PL.fmincon = options.fmincon;
+% Define parameter values (allow for dynamical properties by
+% `model.par_fun`)
+if isa(model.par_fun, 'function_handle')
+	dyn_par_props = model.par_fun(data, t, model);
+else
+	dyn_par_props = struct();
+end
 
-% Define parameter values
 parameters.name = model.par_names;
-parameters.min = model.par_min;
-parameters.max = model.par_max;
 parameters.number = model.par_num;
+
+if isfield(dyn_par_props, 'par_min')
+	parameters.min = dyn_par_props.par_min;
+else
+	parameters.min = model.par_min;
+end
+if isfield(dyn_par_props, 'par_max')
+	parameters.max = dyn_par_props.par_max;
+else
+	parameters.max = model.par_max;
+end
+if isfield(dyn_par_props, 'guess')
+	parameters.guess = dyn_par_props.guess;
+else
+	parameters.guess = model.guess;
+end
+
 
 % Suppress annoying warnings
 warning('off', 'MATLAB:nearlySingularMatrix'); %fmincon
