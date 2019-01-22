@@ -47,7 +47,7 @@ options.logPost_options.logpar = model.par_log; % logarithmic parameters?
 
 % Data weights
 weights = struct('type', 'const', 'value', true);
-if isnumeric(model.weights)
+if isnumeric(model.weights) && ~isempty(model.weights)
 	switch length(model.weights)
 		case length(data)
 			weights.value = model.weights;
@@ -70,8 +70,8 @@ else
 end
 options.logPost_options.weights = weights;
 
-% Define parameter values (allow for dynamical properties by
-% `model.par_fun`)
+% Define parameter values
+% (allow for dynamical properties by `model.par_fun`)
 if isa(model.par_fun, 'function_handle')
 	dyn_par_props = model.par_fun(data, t, model);
 else
@@ -81,12 +81,12 @@ end
 parameters.name = model.par_names;
 parameters.number = model.par_num;
 
-if isfield(dyn_par_props, 'par_min')
+if isfield(dyn_par_props, 'min')
 	parameters.min = dyn_par_props.par_min;
 else
 	parameters.min = model.par_min;
 end
-if isfield(dyn_par_props, 'par_max')
+if isfield(dyn_par_props, 'max')
 	parameters.max = dyn_par_props.par_max;
 else
 	parameters.max = model.par_max;
