@@ -8,8 +8,10 @@ function model = model_definitions(modelname)
 %			marker:		The human readable marker name
 %			normalize_offset: Logical indicator for offset normalization
 %			simulate:	The simulation function
-%			postproc:	The postprocessing routine
 %			preproc:	A preprocessing routine (optional)
+%			postproc:	The postprocessing routine
+%			interactive: Logical whether (blocking) interactivity is needed
+%			n_runs:		The number of fitting runs (-1 for default)
 %			par_num:	The number of parameters
 %			par_min:	Vector of the minimum values the parameters can take
 %			par_max:	Vector of the maximum values the parameters can take
@@ -36,8 +38,8 @@ function model = model_definitions(modelname)
 
 %% Initialize model structure
 model = struct('name',[], 'marker',[], 'normalize_offset',false, ...
-	'simulate',[], 'postproc',false, 'preproc',false, ...
-	'par_num',0, 'par_min',[], 'par_max',[], 'weights',[], ...
+	'simulate',[], 'preproc',false, 'postproc',false, 'interactive',false, ...
+	'n_runs',-1, 'par_num',0, 'par_min',[], 'par_max',[], 'weights',[], ...
 	'par_log',false, 'guess',[], 'par_fun',[], 'par_names',[]);
 
 %% Populate model structure

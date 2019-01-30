@@ -310,6 +310,7 @@ warning('off', 'MATLAB:singularMatrix'); %fmincon
 warning('off', 'MATLAB:mir_warning_maybe_uninitialized_temporary'); %parfor
 
 %% Define model specifications
+has_interactivity = false;
 model_ind(1:ndatafiles,1) = uint8(1);
 
 for imodelname = 1:length(modelname)
@@ -328,6 +329,9 @@ for imodelname = 1:length(modelname)
 
 		if ~exists_already
 			model_index = length(models) + 1;
+			if model.interactive
+				has_interactivity = true;
+			end
 		end
 	else
 		model_index = 1;
@@ -623,7 +627,7 @@ save(Ffile, ...
 	'model_name_ind', 'model_name_len', 't', 't_sim', 't_unit', 'format_cell_number', ...
 	'data_len', 'data_sim_len', 'size_F', 'dataindices', 'model_ind', 'models', ...
 	't_ind', 't_sim_ind', 't_sim_res', 'format_cell_number_ind', ...
-	'data', 'file_ind', 'index_F', ...
+	'data', 'file_ind', 'index_F', 'has_interactivity', ...
 	'outmode', 'time_now', 'temp_dir', ...
 	'ntraces', 'ndatafiles', 'max_par_num', 'log_trace', 'log_file', ...
 	'-v7.3');
