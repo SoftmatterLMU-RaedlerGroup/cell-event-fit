@@ -3,7 +3,7 @@
 % this script. Else, this script must be re-run in each session where you
 % want to use this program.
 %
-% Copyright © 2018 Daniel Woschée <daniel.woschee@physik.lmu.de>
+% Copyright © 2018-2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
 % Faculty of Physics / Ludwig-Maximilians-Universität München
 %
 % This program is free software; you can redistribute it and/or modify
@@ -18,6 +18,6 @@
 % You should have received a copy of the GNU General Public License
 % along with this program. If not, see <https://www.gnu.org/licenses/>.
 base_dir = fileparts(mfilename('fullpath'));
-sub_dirs = {'from_PESTO'; 'postprocessing'; 'preprocessing'; 'simulation'};
+sub_dirs = {'from_PESTO'; 'postprocessing'; 'preprocessing'; 'simulation'; 'util'};
 new_dirs = [ base_dir; fullfile(base_dir, sub_dirs) ];
 addpath(new_dirs{:});
