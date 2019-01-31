@@ -1,4 +1,4 @@
-function [varargout] = do_fitting(model, t, data)
+function varargout = do_fitting(model, t, data, par_fun)
 %do_fitting configures the multistart optimization
 %
 % Input parameters
@@ -11,6 +11,7 @@ function [varargout] = do_fitting(model, t, data)
 %   model.par_min			array of minimum values for fitting parameters
 % t						time vector
 % data					data vector
+% par_fun				(optional) function for setting parameter options
 %
 % Output parameters
 % =================
@@ -60,7 +61,7 @@ elseif isstruct(model.weights) && isfield(model.weights, 'parameter')
 	% DO NOT USE THIS OPTION!
 	% Estimating the weights together with the parameters is bad practice.
 	% This functionality is only kept for historical reasons
-	% and might eventually be removed.
+	% and may eventually be removed.
 	weights.type = 'parameter';
 	weights.value = model.weights.parameter;
 elseif isa(model.weights, 'function_handle')
@@ -72,12 +73,13 @@ options.logPost_options.weights = weights;
 
 % Define parameter values
 % (allow for dynamical properties by `model.par_fun`)
-if isa(model.par_fun, 'function_handle')
+if nargin >=4 && isa(par_fun, 'function_handle')
+	dyn_par_props = par_fun(data, t, model);
+elseif isa(model.par_fun, 'function_handle')
 	dyn_par_props = model.par_fun(data, t, model);
 else
 	dyn_par_props = struct();
 end
-
 parameters.name = model.par_names;
 parameters.number = model.par_num;
 
@@ -95,6 +97,26 @@ if isfield(dyn_par_props, 'guess')
 	parameters.guess = dyn_par_props.guess;
 else
 	parameters.guess = model.guess;
+end
+
+if isfield(dyn_par_props, 'n_starts')
+	n_starts = dyn_par_props.n_starts;
+	if n_starts > 0
+		options.n_starts = n_starts;
+	elseif n_starts == 0
+
+		if isempty(parameters.guess)
+			varargout{1} = NaN(1, parameters.number);
+		else
+			varargout{1} = parameters.guess;
+		end
+		varargout{2} = NaN;
+		if nargout > 2
+			varargout{3} = NaN;
+		end
+
+		return
+	end
 end
 
 

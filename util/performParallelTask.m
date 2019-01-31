@@ -1,10 +1,9 @@
-function [ Ffile ] = performParallelTask( Ffile, ntraces )
+function [ Ffile ] = performParallelTask( Ffile )
 %performParallelTask performs the parallel computing task.
 %
 % Input parameters
 % ================
 % Ffile		String containing the path of the input mat-file
-% ntraces	The number of traces to be processed
 %
 % Copyright © 2018-2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
 % Faculty of Physics / Ludwig-Maximilians-Universität München
@@ -21,7 +20,11 @@ function [ Ffile ] = performParallelTask( Ffile, ntraces )
 % You should have received a copy of the GNU General Public License
 % along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-%% Execute parallel job
+%% Get session data
+mf = matfile(Ffile);
+has_interactivity = mf.has_interactivity;
+
+%% Prepare parallel pool
 % Suppress warning on parallel pool startup
 warning('off','MATLAB:datetime:NonstandardSystemTimeZone')
 
@@ -33,162 +36,41 @@ else
 	nWorkers = p.NumWorkers;
 end
 
-parfor i = 1:ntraces
-%for i = 1:ntraces
-	% Read in temporary files
-	mf = matfile(Ffile);
-	file_ind = mf.file_ind(i,1);
-	model = mf.models(mf.model_ind(file_ind,1), 1);
+%% Check for traces with interactivity
+if has_interactivity
+	% Get interactive models
+	n_models = size(mf, 'models');
+	inter_models = false(1, n_models);
+	for iM = 1:n_models
+		m = mf.models(iM, 1);
+		inter_models(iM) = m.interactive;
+	end
+	[~,~,inter_models] = find(inter_models);
 
-	% Write log message
-	w_id = 0;
-	if exist('getCurrentTask', 'file') == 2
-		worker = getCurrentTask();
-		if isprop(worker, 'ID')
-			w_id = worker.ID;
-		end
+	% Get files associated with interactive models
+	[~,~,inter_files] = find(ismember(mf.model_ind, inter_models));
+
+	% Get traces from files with and without interactivity
+	inter_idx = ismember(file_ind, inter_files);
+
+	[~,~,batch_idx] = find(~inter_idx);
+	if ~isrow(batch_idx)
+		batch_idx = batch_idx';
 	end
 
-	disp([get_time 'Worker ' num2str(w_id) ' processing trace ' ...
-		num2str(mf.index_F(i,1)) ' from file ' num2str(file_ind)])
-
-	% Allocate memory
-	data_indices = [];
-
-	%% Do marker-specific pre-processing
-	if isa(model.preproc, 'function_handle')
-		data_indices = model.preproc( ...
-			mf.data(1:mf.data_len(file_ind,1),i), ...
-			mf, i);
+	[~,~,inter_idx] = find(inter_idx);
+	if ~isrow(inter_idx)
+		inter_idx = inter_idx';
 	end
-
-	% Define data range to be fitted (Default: fit whole data)
-	if isempty(data_indices)
-		data_indices = 1:mf.data_len(file_ind,1);
-	end
-
-	%% Perform the actual fit
-	% Get data points for fitting
-	mf_data = mf.data(1:mf.data_len(file_ind, 1), i);
-	mf_data = mf_data(data_indices);
-	mf_t = mf.t(1:mf.data_len(file_ind, 1), mf.t_ind(file_ind, 1));
-	mf_t = mf_t(data_indices);
-
-	% Get parameters
-	[params,logPost] = do_fitting(model, mf_t, mf_data);
-
-	% Calculate real parameters (not logarithmic ones)
-	if any(model.par_log)
-		if length(model.par_log) == 1
-			params = 10 .^ params;
-		else
-			params(model.par_log) = 10 .^ params(model.par_log);
-		end
-	end
-
-	% Ensure that params vector has right dimensions
-	if iscolumn(params)
-		params = params';
-	end
-
-	% Evaluate fitted function
-	data_sim = model.simulate(mf.t_sim(1:mf.data_sim_len(file_ind,1),mf.t_sim_ind(file_ind,1)), params);
-
-	%% Postprocessing
-	% Predefine default result values
-	max_val = NaN;
-	max_ind = NaN;
-	min_val = NaN;
-	min_ind = NaN;
-	amplitude = NaN;
-	data_amp = NaN;
-	t_event = NaN;
-	event_deriv = NaN;
-	fit_parabola = [];
-	fit_type = NaN;
-	rising_edge_xoff = NaN;
-	rising_edge_yoff = NaN;
-	rising_edge_scale = NaN;
-	falling_edge_xoff = NaN;
-	falling_edge_yoff = NaN;
-	falling_edge_scale = NaN;
-
-	% Execute postprocessing function
-	if isfield(model, 'postproc') && isa(model.postproc, 'function_handle')
-		% Determine extrema and amplitude of fit
-		[max_val, max_ind] = max(data_sim);
-		[min_val, min_ind] = min(data_sim);
-		amplitude = max_val - min_val;
-
-		% Determine amplitude of experimental data
-		data = mf.data(1:mf.data_len(mf.file_ind(i,1),1),i);
-		data_amp = max(data) - min(data);
-
-		% Write structure as input arguments for postprocessing
-		D = struct( 'data',mf.data(:,i), 'index',mf.index_F(i,1) );
-		F = struct( 't_sim', mf.t_sim( 1:mf.data_sim_len(file_ind,1), mf.t_sim_ind(file_ind,1) ), ...
-			'modelname', mf.model_name(mf.model_name_ind(file_ind,1),1:mf.model_name_len(file_ind,1)), ...
-			'simulate', model.simulate );
-		R = struct( 'data_sim', data_sim, 'max_val', max_val, 'params', params, ...
-				'max_ind', max_ind, 'min_val', min_val, 'min_ind', min_ind, ...
-				'amplitude', amplitude, 'data_amp', data_amp );
-
-		% Run model specific postprocessing routine
-		if isfield(model, 'postproc') && isa(model.postproc, 'function_handle')
-			[t_event, fit_info, event_deriv] = model.postproc(D, F, R);
-		end
-
-		fit_type = fit_info.type;
-		if isfield(fit_info, 'parabola')
-			fit_parabola = fit_info.parabola;
-		end
-
-		if isfield(fit_info, 'rising_edge_xoff')
-			rising_edge_xoff = fit_info.rising_edge_xoff;
-		end
-		if isfield(fit_info, 'rising_edge_yoff')
-			rising_edge_yoff = fit_info.rising_edge_yoff;
-		end
-		if isfield(fit_info, 'rising_edge_scale')
-			rising_edge_scale = fit_info.rising_edge_scale;
-		end
-
-		if isfield(fit_info, 'falling_edge_xoff')
-			falling_edge_xoff = fit_info.falling_edge_xoff;
-		end
-		if isfield(fit_info, 'falling_edge_yoff')
-			falling_edge_yoff = fit_info.falling_edge_yoff;
-		end
-		if isfield(fit_info, 'falling_edge_scale')
-			falling_edge_scale = fit_info.falling_edge_scale;
-		end
-
-	else
-		disp(['No postprocessing routine defined for model ' model.name]);
-	end
-
-	%% Write results to temporary matfile
-	append_worker_file(mf.temp_dir, mf.time_now, w_id, i, ...
-		max_val, ...
-		max_ind, ...
-		min_val, ...
-		min_ind, ...
-		amplitude, ...
-		data_amp, ...
-		logPost, ...
-		t_event, ...
-		event_deriv, ...
-		fit_type, ...
-		rising_edge_xoff, ...
-		rising_edge_yoff, ...
-		rising_edge_scale, ...
-		falling_edge_xoff, ...
-		falling_edge_yoff, ...
-		falling_edge_scale, ...
-		data_sim, ...
-		params, ...
-		fit_parabola)
+else
+	batch_idx = [];
 end
+
+%% Execute parallel job
+if has_interactivity
+	interactive_task(mf, inter_idx);
+end
+parallel_batch_task(mf, batch_idx);
 
 %% Perform cleanup (combine single worker matfiles to global matfile)
 disp([ get_time 'Cleaning up worker matfiles ...' ])

@@ -18,8 +18,7 @@ function append_worker_file(temp_dir, time_now, worker_id, i, ...
 	data_sim, ...
 	params, ...
 	fit_parabola)
-%COMBINE_WORKER_FILES appends new data to the worker-specific matfile
-%   Detailed explanation goes here
+%APPEND_WORKER_FILE appends new data to the worker-specific matfile
 %
 % Input parameters
 % ================

@@ -7,7 +7,7 @@ function [] = fit_apoptosis(varargin)
 %	varargin(3):	path for results to be saved
 %	varargin(4):	print/export options
 %
-% Copyright © 2018 Daniel Woschée <daniel.woschee@physik.lmu.de>
+% Copyright © 2018-2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
 % Faculty of Physics / Ludwig-Maximilians-Universität München
 %
 % This program is free software; you can redistribute it and/or modify
@@ -28,16 +28,13 @@ Ffile = readInputData(varargin{:});
 mf = matfile(Ffile);
 disp([get_time 'Read in ' num2str(mf.ntraces) ' ' mf.log_trace ' from ' num2str(mf.ndatafiles) ' ' mf.log_file '.'])
 
-% Get number of traces
-ntraces = mf.ntraces;
-
 % Close matfile
 clear mf;
 
 %% Perform fit, iterating over traces in all files
 disp([ get_time 'Starting fitting of all traces ...' ])
 
-Ffile = performParallelTask(Ffile, ntraces);
+Ffile = performParallelTask(Ffile);
 
 %% Export results
 disp([ get_time 'Exporting data ...' ])

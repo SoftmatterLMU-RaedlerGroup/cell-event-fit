@@ -329,7 +329,7 @@ for imodelname = 1:length(modelname)
 
 		if ~exists_already
 			model_index = length(models) + 1;
-			if model.interactive
+			if isa(model.interactive, 'function_handle')
 				has_interactivity = true;
 			end
 		end
@@ -338,7 +338,7 @@ for imodelname = 1:length(modelname)
 	end
 
 	if ~exists_already
-		models(model_index,1) = model;
+		models(model_index, 1) = model;
 	end
 
 	model_ind(imodelname) = model_index;
