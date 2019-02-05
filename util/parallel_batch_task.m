@@ -10,7 +10,7 @@ function parallel_batch_task(mf, indices)
 % the parallelization; else, the fitting is performed serially.
 %
 %
-% Copyright © 2018-2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
+% Copyright © 2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
 % Faculty of Physics / Ludwig-Maximilians-Universität München
 %
 % This program is free software; you can redistribute it and/or modify
@@ -163,7 +163,7 @@ parfor i = indices
 	end
 
 	%% Write results to temporary matfile
-	append_worker_file(mf.temp_dir, mf.time_now, w_id, i, ...
+	append_worker_file_old(mf.temp_dir, mf.time_now, w_id, i, ...
 		max_val, ...
 		max_ind, ...
 		min_val, ...
