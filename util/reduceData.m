@@ -45,31 +45,36 @@ end
 
 %% Allocate arrays for results in global matfile
 % trace-wise indexing
-mf.amplitude(1:ntraces,1) = single(NaN);
-mf.data_amp(1:ntraces,1) = single(NaN);
-mf.max_val(1:ntraces,1) = single(NaN);
-mf.max_ind(1:ntraces,1) = uint32(NaN);
-mf.min_val(1:ntraces,1) = single(NaN);
-mf.min_ind(1:ntraces,1) = uint32(NaN);
-mf.logPost(1:ntraces,1) = single(NaN);
-mf.t_event(1:ntraces,1) = single(NaN);
-mf.event_deriv(1:ntraces,1) = single(NaN);
-mf.fit_type(1:ntraces,1) = int8(0);
+mf.amplitude = NaN(ntraces, 1, 'single');
+mf.data_amp = NaN(ntraces, 1, 'single');
+mf.max_val = NaN(ntraces, 1, 'single');
+mf.max_ind = zeros(ntraces, 1, 'uint32');
+mf.min_val = NaN(ntraces, 1, 'single');
+mf.min_ind = zeros(ntraces, 1, 'uint32');
+mf.logPost = NaN(ntraces, 1, 'single');
+mf.t_event = NaN(ntraces, 1, 'single');
+mf.event_deriv = NaN(ntraces, 1, 'single');
+mf.fit_type = int8(0);
+
+mf.data_sim = NaN(max(mf.data_sim_len), ntraces, 'single');
+mf.params = NaN(ntraces, mf.max_par_num, 'single');
+
+mf.custom_data_map = zeros(ntraces, 2, 'uint32');
+mf.custom_data_labels = int32.empty(0,1);
+mf.custom_data_values = single.empty(0,1);
+
+% DEPRECATED values
 mf.rising_edge_xoff(1:ntraces,1) = single(NaN);
 mf.rising_edge_yoff(1:ntraces,1) = single(NaN);
 mf.rising_edge_scale(1:ntraces,1) = single(NaN);
 mf.falling_edge_xoff(1:ntraces,1) = single(NaN);
 mf.falling_edge_yoff(1:ntraces,1) = single(NaN);
 mf.falling_edge_scale(1:ntraces,1) = single(NaN);
-
-mf.data_sim = NaN(max(mf.data_sim_len), ntraces, 'single');
-mf.params = NaN(ntraces, mf.max_par_num, 'single');
-
 mf.fit_parabola_ind(1:ntraces,1) = uint32(0);
 
 % file-wise indexing
-mf.noise(1:ndatafiles,1) = single(NaN);
-mf.amp_max(1:ndatafiles,1) = single(-Inf);
+mf.noise = NaN(ndatafiles, 1, 'single');
+mf.amp_max = -Inf(ndatafiles, 1, 'single');
 
 % Special cases
 fit_parabola = NaN(0, 'single');
@@ -110,31 +115,61 @@ for f = 0:nWorkers
 		mf.t_event(j,1) = wf.t_event(i,1);
 		mf.event_deriv(j,1) = wf.event_deriv(i,1);
 		mf.fit_type(j,1) = wf.fit_type(i,1);
-		mf.rising_edge_xoff(j,1) = wf.rising_edge_xoff(i,1);
-		mf.rising_edge_yoff(j,1) = wf.rising_edge_yoff(i,1);
-		mf.rising_edge_scale(j,1) = wf.rising_edge_scale(i,1);
-		mf.falling_edge_xoff(j,1) = wf.falling_edge_xoff(i,1);
-		mf.falling_edge_yoff(j,1) = wf.falling_edge_yoff(i,1);
-		mf.falling_edge_scale(j,1) = wf.falling_edge_scale(i,1);
 
 		% Copy non-scalar data into local struct array
 		dsl = mf.data_sim_len(mf.file_ind(j, 1), 1);
 		mf.data_sim(1:dsl, j) = wf.data_sim(1:dsl, i);
 		mf.params(j, 1:size(wf.params, 2)) = wf.params(i,:);
 
-		if wf.fit_parabola_ind(i,1)
-			d_len = size(wf.fit_parabola, 1) - size(fit_parabola, 1);
-			if d_len > 0
-				fit_parabola = [ [fit_parabola; NaN(d_len, size(fit_parabola, 2))], ...
-					wf.fit_parabola(:,wf.fit_parabola_ind(i,1)) ];
-			elseif d_len < 0
-				fit_parabola = [ fit_parabola, ...
-					[wf.fit_parabola(:,wf.fit_parabola_ind(i,1)); NaN(-d_len, 1)] ];
-			else
-				fit_parabola = [ fit_parabola, ...
-					wf.fit_parabola(:,wf.fit_parabola_ind(i,1)) ];
+		if numel(who(wf, 'custom_data_map', 'custom_data_labels', 'custom_data_values')) == 3
+			old_custom_len = size(mf, 'custom_data_labels', 1);
+			new_custom_len = size(wf, 'custom_data_labels', 1);
+			total_custom_len = old_custom_len + new_custom_len;
+
+			wf_custom_map = wf.custom_data_map;
+			mf.custom_data_map(old_custom_len+1:total_custom_len, 1) = ...
+				wf_custom_map(wf_custom_map ~= 0) + old_custom_len;
+			mf.custom_data_labels(old_custom_len+1:total_custom_len, 1) = ...
+				wf.custom_data_labels;
+			mf.custom_data_values(old_custom_len+1:total_custom_len, 1) = ...
+				wf.custom_data_values;
+		end
+
+		% DEPRECATED
+		if ~isempty(who(wf, 'rising_edge_xoff'))
+			mf.risdge_xoff(j,1) = wf.rising_edge_xoff(i,1);
+		end
+		if ~isempty(who(wf, 'rising_edge_yoff'))
+			mf.rising_edge_yoff(j,1) = wf.rising_edge_yoff(i,1);
+		end
+		if ~isempty(who(wf, 'rising_edge_scale'))
+			mf.rising_edge_scale(j,1) = wf.rising_edge_scale(i,1);
+		end
+		if ~isempty(who(wf, 'falling_edge_xoff'))
+			mf.falling_edge_xoff(j,1) = wf.falling_edge_xoff(i,1);
+		end
+		if ~isempty(who(wf, 'falling_edge_yoff'))
+			mf.falling_edge_yoff(j,1) = wf.falling_edge_yoff(i,1);
+		end
+		if ~isempty(who(wf, 'falling_edge_scale'))
+			mf.falling_edge_scale(j,1) = wf.falling_edge_scale(i,1);
+		end
+
+		if ~isempty(who(wf, 'fit_parabola')) && ~isempty(who(wf, 'fit_parabola_ind'))
+			if wf.fit_parabola_ind(i,1)
+				d_len = size(wf.fit_parabola, 1) - size(fit_parabola, 1);
+				if d_len > 0
+					fit_parabola = [ [fit_parabola; NaN(d_len, size(fit_parabola, 2))], ...
+						wf.fit_parabola(:,wf.fit_parabola_ind(i,1)) ];
+				elseif d_len < 0
+					fit_parabola = [ fit_parabola, ...
+						[wf.fit_parabola(:,wf.fit_parabola_ind(i,1)); NaN(-d_len, 1)] ];
+				else
+					fit_parabola = [ fit_parabola, ...
+						wf.fit_parabola(:,wf.fit_parabola_ind(i,1)) ];
+				end
+				mf.fit_parabola_ind(j,1) = uint32( size(fit_parabola, 2) );
 			end
-			mf.fit_parabola_ind(j,1) = uint32( size(fit_parabola, 2) );
 		end
 	end
 
