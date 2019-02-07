@@ -1,4 +1,6 @@
 function append_worker_file(temp_dir, time_now, worker_id, i, ...
+	params, ...
+	data_sim, ...
 	max_val, ...
 	max_ind, ...
 	min_val, ...
@@ -9,13 +11,9 @@ function append_worker_file(temp_dir, time_now, worker_id, i, ...
 	t_event, ...
 	event_deriv, ...
 	fit_type, ...
-	data_sim, ...
 	custom_data_labels, ...
-	custom_data_values, ...
-	params)
+	custom_data_values)
 %APPEND_WORKER_FILE appends new data to the worker-specific matfile
-%
-% TODO: change this to use custom data
 %
 % Input parameters
 % ================
@@ -63,17 +61,17 @@ if exist(wfname, 'file')
 	append_to_mf_vec('min_ind', min_ind);
 	append_to_mf_vec('amplitude', amplitude);
 	append_to_mf_vec('data_amp', data_amp);
-	append_to_mv_vec('logPost', logPost);
-	append_to_mv_vec('t_event', t_event);
-	append_to_mv_vec('event_deriv', event_deriv);
-	append_to_mv_vec('fit_type', fit_type);
+	append_to_mf_vec('logPost', logPost);
+	append_to_mf_vec('t_event', t_event);
+	append_to_mf_vec('event_deriv', event_deriv);
+	append_to_mf_vec('fit_type', fit_type);
 
 	old_size = size(wfo, 'params');
 	new_length = length(params);
 	total_size = [(old_size(1) + 1), max(old_size(2), new_length)];
 	wf.params = NaN(total_size, 'single');
-	wf(1:old_size(1), 1:old_size(2)) = wfo.params;
-	wf(total_size(1), 1:new_length) = params;
+	wf.params(1:old_size(1), 1:old_size(2)) = wfo.params;
+	wf.params(total_size(1), 1:new_length) = params;
 
 	old_size = size(wfo, 'data_sim');
 	new_length = length(data_sim);
@@ -146,8 +144,8 @@ else
 		wf.custom_data_values = NaN(len_custom, 1, 'single');
 		wf.custom_data_values(1:len_val, 1) = custom_data_values;
 	end
-
 end
+
 
 	function append_to_mf_vec(name, value, dtype)
 		if ~exist('value', 'var') || isempty(value)

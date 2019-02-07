@@ -39,26 +39,26 @@ end
 %% Check for traces with interactivity
 if has_interactivity
 	% Get interactive models
-	n_models = size(mf, 'models');
+	n_models = max(size(mf, 'models'));
 	inter_models = false(1, n_models);
 	for iM = 1:n_models
 		m = mf.models(iM, 1);
-		inter_models(iM) = m.interactive;
+		inter_models(iM) = isa(m.interactive, 'function_handle');
 	end
-	[~,~,inter_models] = find(inter_models);
+	inter_models = find(inter_models);
 
 	% Get files associated with interactive models
-	[~,~,inter_files] = find(ismember(mf.model_ind, inter_models));
+	inter_files = find(ismember(mf.model_ind, inter_models));
 
 	% Get traces from files with and without interactivity
-	inter_idx = ismember(file_ind, inter_files);
+	inter_idx = ismember(mf.file_ind, inter_files);
 
-	[~,~,batch_idx] = find(~inter_idx);
+	batch_idx = find(~inter_idx);
 	if ~isrow(batch_idx)
 		batch_idx = batch_idx';
 	end
 
-	[~,~,inter_idx] = find(inter_idx);
+	inter_idx = find(inter_idx);
 	if ~isrow(inter_idx)
 		inter_idx = inter_idx';
 	end
@@ -68,7 +68,7 @@ end
 
 %% Execute parallel job
 if has_interactivity
-	interactive_task(mf, inter_idx);
+	parallel_interactive_task(mf, inter_idx);
 end
 parallel_batch_task(mf, batch_idx);
 

@@ -28,71 +28,105 @@ if ~exist('indices', 'var') || isempty(indices)
 	indices = 1:mf.ntraces;
 end
 
-if isempty(gcp)
-	is_parallel = false;
-else
-	is_parallel = true;
-end
+% TODO: run in serial when no parallel computing toolbox available
+% if isempty(gcp)
+% 	is_parallel = false;
+% else
+% 	is_parallel = true;
+% end
+
 futures = parallel.FevalFuture.empty;
-future_map = containers.Map('KeyType','uint8', 'ValueType','uint32');
-tempinter_map = containers.Map('KeyType','uint32', 'ValueType','any');
+future_map = uint32.empty(0, 1);
+inter_private_map = containers.Map('KeyType','uint32', 'ValueType','any');
 MAX_FUTURES = 100;
 
 while ~isempty(indices) || ~isempty(futures)
+	% Reset `idx` (index of current trace)
+	idx = [];
+
+	% Get index of a trace readily fitted asynchronously
 	if ~isempty(futures)
-		[idxFut, S] = fetchNext(futures);
-		f, idx = remove_future(idxFut);
-		% TODO
+		if isempty(indices) || length(futures) >= MAX_FUTURES
+			% Wait for traces to be finished.
+			% There are no more traces to be fitted (`isempty(indices)`),
+			% or the fitting queue is full (`length(futures) >= MAX_FUTURES`)
+			timeout = Inf;
+		else
+			% Do not wait for traces to be finished
+			timeout = 0;
+		end
+		[idxFut, S] = fetchNext(futures, timeout);
+		[~, idx] = remove_future(idxFut);
 	end
 
-	if ~isempty(indices)
-		% Pop index of a trace to fit
+	% If no future has been finished, `idx` and `S` are now empty
+	if isempty(idx)
+		% Pop (actually "shift") index of a new trace to fit
 		idx = indices(1);
 		indices = indices(2:end);
-
-		% Get trace data
-		file_ind = mf.file_ind(idx, 1);
-		index_F = mf.index_F(idx, 1);
-		model = mf.models(mf.model_ind(file_ind, 1), 1);
-		datalen = mf.data_len(file_ind, 1);
-
-		mf_data = mf.data(1:datalen, idx);
-		mf_t = mf.t(1:datalen, mf.t_ind(file_ind, 1));
-		
-		% User interaction
-		private = inter_private(idx);
-		[is_to_fit, params, data_indices, par_fun, private] = ...
-			model.interactive(mf_t, mf_data, model, params, mf, private);
-		if is_to_fit
-			inter_private(idx, private);
-		else
-			inter_private(idx, []);
-		end
-
-		% Get parameters
-		if is_to_fit
-
-			% Define data range to be fitted (Default: fit whole data)
-			if isempty(data_indices) && isa(model.preproc, 'function_handle')
-				data_indices = model.preproc( ...
-					mf.data(1:datalen, idx), ...
-					mf, idx);
-			end
-			if isempty(data_indices)
-				data_indices = 1:datalen;
-			end
-			mf_t = mf_t(data_indices);
-			mf_data = mf_data(data_indices);
-			mf_tsim = mf.t_sim(1:mf.data_sim_len(file_ind,1), mf.t_sim_ind(file_ind,1));
-
-			% Perform optimization
-			add_future(idx_trace, index_F, model, mf_t, mf_data, mf_tsim, par_fun)
-		end
-		
-		
+		S = [];
 	end
-	
+
+	% Get trace data
+	file_ind = mf.file_ind(idx, 1);
+	index_F = mf.index_F(idx, 1);
+	model = mf.models(mf.model_ind(file_ind, 1), 1);
+	datalen = mf.data_len(file_ind, 1);
+
+	mf_data = mf.data(1:datalen, idx);
+	mf_t = mf.t(1:datalen, mf.t_ind(file_ind, 1));
+
+	% User interaction
+	private = inter_private(idx);
+	[is_to_fit, S_inter, data_indices, par_fun, private] = ...
+		model.interactive(idx, mf_t, mf_data, model, S, mf, private);
+
+	% Check whether to fit the trace
+	if is_to_fit
+		%% User wants to fit the data
+		% Store private data for next call to interactive function
+		inter_private(idx, private);
+
+		% Define data range to be fitted (Default: fit whole data)
+		if isempty(data_indices) && isa(model.preproc, 'function_handle')
+			data_indices = model.preproc( ...
+				mf.data(1:datalen, idx), ...
+				mf, idx);
+		end
+		if isempty(data_indices)
+			data_indices = 1:datalen;
+		end
+		mf_t = mf_t(data_indices);
+		mf_data = mf_data(data_indices);
+		mf_tsim = mf.t_sim(1:mf.data_sim_len(file_ind,1), mf.t_sim_ind(file_ind,1));
+
+		% Perform optimization
+		add_future(idx, index_F, model, mf_t, mf_data, mf_tsim, par_fun)
+
+	else
+		%% User does not want to fit the data
+		% Delete private data
+		inter_private(idx, []);
+
+		% Write fit results to matfile
+		append_worker_file(mf.temp_dir, mf.time_now, 0, idx, ...
+			getResults('params', NaN(1, model.par_num, 'single')), ...
+			getResults('data_sim', NaN(length(mf_tsim), 1, 'single')), ...
+			getResults('max_val', NaN('single')), ...
+			getResults('max_ind', zeros('uint32')), ...
+			getResults('min_val', NaN('single')), ...
+			getResults('min_ind', zeros('uint32')), ...
+			getResults('amplitude', NaN('single')), ...
+			getResults('data_amp', NaN('single')), ...
+			getResults('logPost', NaN('single')), ...
+			getResults('t_event', NaN('single')), ...
+			getResults('event_deriv', NaN('single')), ...
+			getResults('fit_type', zeros('int8')), ...
+			getResults('custom_data_labels', []), ...
+			getResults('custom_data_values', []))
+	end
 end
+
 
 	function [F, idx_trace] = remove_future(idx)
 		%remove_future removes a future from the future array
@@ -106,25 +140,43 @@ end
 		idx_trace = future_map(idx);
 
 		futures = futures([1:idx-1, idx+1:end]);
-		remove(future_map, idx);
+		future_map = future_map([1:idx-1, idx+1:end]);
 	end
 
 	function add_future(idx_trace, index_F, model, t, data, tsim, par_fun)
 		%add_future adds a new future to the future array
-		futures(end+1) = parfeval(parevalfun, 1, ...
+		futures(end+1) = parfeval(@parevalfun, 1, ...
 			index_F, model, t, data, tsim, par_fun);
-		future_map(length(futures)) = idx_trace;
+		future_map(end+1) = idx_trace;
 	end
 
 	function p = inter_private(idx, p_new)
 		%inter_private writes, reads or removes data in `tempinter_map`
 		p = [];
-		if nargin == 1 && tempinter_map.iskey(idx)
-			p = tempinter_map(idx);
-		elseif isempty(p_new)
-			tempinter_map.remove(idx);
+		if nargin == 1 && isKey(inter_private_map, idx)
+			p = inter_private_map(idx);
+		elseif nargin > 1
+			if isempty(p_new) && isKey(inter_private_map, idx)
+				inter_private_map.remove(idx);
+			elseif ~isempty(p_new)
+				inter_private_map(idx) = p_new;
+			end
+		end
+	end
+
+	function x = getResults(name, default)
+		%getResults helps retrieving a fit result.
+		%
+		% The fit result is first searched in the field `name` in `S_inter`.
+		% If it is not found there, it is searched in the field `name` in
+		% `S`. If it is not found there, either, the fit result is set to
+		% `default`.
+		if isfield(S_inter, name)
+			x = S_inter.(name);
+		elseif isfield(S, name)
+			x = S.(name);
 		else
-			tempinter_map(idx) = p_new;
+			x = default;
 		end
 	end
 
@@ -134,7 +186,7 @@ end
 function S = parevalfun(index_F, model, t, data, t_sim, par_fun)
 	% Initialize struct of results
 	S = struct( ...
-		'params', single.empty(0, model.par_num), ...
+		'params', NaN(1, model.par_num, 'single'), ...
 		'logPost', NaN('single'), ...
 		'data_sim', NaN(size(t_sim), 'single'), ...
 		'max_val', NaN('single'), ...
@@ -151,7 +203,8 @@ function S = parevalfun(index_F, model, t, data, t_sim, par_fun)
 		);
 
 	% Perform fitting
-	[S.params(:), S.logPost(1)] = do_fitting(model, t, data, par_fun);
+	[params, S.logPost(1)] = do_fitting(model, t, data, par_fun);
+	S.params(:) = params;
 	if any(model.par_log)
 		if length(model.par_log) == 1
 			S.params = 10 .^ S.params;

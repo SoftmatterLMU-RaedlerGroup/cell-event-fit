@@ -41,10 +41,14 @@ options.fmincon = optimset('algorithm', 'interior-point', ...
                            'GradObj', 'off', ...
                            'MaxIter', 300, ...
                            'MaxFunEvals', 300*4);
-options.n_starts = 100; % or 150
 options.plot = 'false';	% 'true','hidden'
 options.mode = 'silent';
 options.logPost_options.logpar = model.par_log; % logarithmic parameters?
+if isempty(model.n_starts) || model.n_starts < 0
+	options.n_starts = 100; % or 150
+else
+	options.n_starts = model.n_starts;
+end
 
 % Data weights
 weights = struct('type', 'const', 'value', true);
