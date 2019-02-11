@@ -76,8 +76,8 @@ end
 options.logPost_options.weights = weights;
 
 % Define parameter values
-% (allow for dynamical properties by `model.par_fun`)
-if nargin >=4 && isa(par_fun, 'function_handle')
+% (allow for dynamical properties by `par_fun` or `model.par_fun`)
+if nargin >= 4 && isa(par_fun, 'function_handle')
 	dyn_par_props = par_fun(data, t, model);
 elseif isa(model.par_fun, 'function_handle')
 	dyn_par_props = model.par_fun(data, t, model);
@@ -88,12 +88,12 @@ parameters.name = model.par_names;
 parameters.number = model.par_num;
 
 if isfield(dyn_par_props, 'min')
-	parameters.min = dyn_par_props.par_min;
+	parameters.min = dyn_par_props.min;
 else
 	parameters.min = model.par_min;
 end
 if isfield(dyn_par_props, 'max')
-	parameters.max = dyn_par_props.par_max;
+	parameters.max = dyn_par_props.max;
 else
 	parameters.max = model.par_max;
 end

@@ -155,6 +155,9 @@ end
 		if ~exist('dtype', 'var')
 			dtype = s.class;
 		end
+		if ~strcmp(class(value), dtype)
+			value = cast(value, dtype);
+		end
 		value_len = length(value);
 		new_len = max(s.size) + value_len;
 		wf.(name) = zeros(new_len, 1, dtype);

@@ -37,6 +37,7 @@ else
 end
 
 %% Check for traces with interactivity
+has_batch = true;
 if has_interactivity
 	% Get interactive models
 	n_models = max(size(mf, 'models'));
@@ -57,6 +58,9 @@ if has_interactivity
 	if ~isrow(batch_idx)
 		batch_idx = batch_idx';
 	end
+	if isempty(batch_idx)
+		has_batch = false;
+	end
 
 	inter_idx = find(inter_idx);
 	if ~isrow(inter_idx)
@@ -70,7 +74,9 @@ end
 if has_interactivity
 	parallel_interactive_task(mf, inter_idx);
 end
-parallel_batch_task(mf, batch_idx);
+if has_batch
+	parallel_batch_task(mf, batch_idx);
+end
 
 %% Perform cleanup (combine single worker matfiles to global matfile)
 disp([ get_time 'Cleaning up worker matfiles ...' ])
