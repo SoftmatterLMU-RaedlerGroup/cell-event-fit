@@ -51,11 +51,12 @@ falling_edge = @(x) (x - info.falling_edge_xoff) * info.falling_edge_scale ...
 %% Plot debug figures
 % Plot measured data
 fh = figure('Visible','off');
-plot(info.t, info.data, 'b-');
-hold on;
+ax = axes(fh);
+hold(ax, 'on');
+plot(ax, info.t, info.data, 'b-');
 
 % Minimum amplitude level:
-line(xlim, [info.noise info.noise], 'LineStyle', ':', 'Color', [1,.5,0]);
+line(ax, ax.XLim, [info.noise info.noise], 'LineStyle', ':', 'Color', [1,.5,0]);
 
 
 switch info.fit_type
@@ -64,99 +65,98 @@ switch info.fit_type
 
 		if isfinite(info.t_event)
 			% Horizontal line:
-			line(xlim, [info.data_sim(1) info.data_sim(1)], 'LineStyle', '-', 'Color', [0,1,0]);
+			line(ax, ax.XLim, [info.data_sim(1) info.data_sim(1)], 'LineStyle', '-', 'Color', [0,1,0]);
 		end
 
-		yl = ylim;
+		yl = ax.YLim;
 
 		% Rising edge:
-		line([rising_edge(yl(1)) rising_edge(yl(2))], yl, 'LineStyle','-', 'Color',[0,1,0]);
+		line(ax, [rising_edge(yl(1)) rising_edge(yl(2))], yl, 'LineStyle','-', 'Color',[0,1,0]);
 
 		% Plot simulation
-		plot(info.t_sim, info.data_sim, 'r-');
+		plot(ax, info.t_sim, info.data_sim, 'r-');
 
 		if isfinite(info.t_event)
 			% Onset time:
-			line([info.t_event info.t_event], ylim, 'LineStyle', '--', 'Color', [0,.5,0]);
+			line(ax, [info.t_event info.t_event], ax.YLim, 'LineStyle', '--', 'Color', [0,.5,0]);
 		end
 
 	case -2 % nokink_parabola
-		yl = ylim;
+		yl = ax.YLim;
 
 		% Plot maximum slope of the rising edge
-		line([rising_edge(yl(1)) rising_edge(yl(2))], yl, 'LineStyle','-', 'Color',[0,1,0]);
+		line(ax, [rising_edge(yl(1)) rising_edge(yl(2))], yl, 'LineStyle','-', 'Color',[0,1,0]);
 
 		if isfinite(info.t_event)
 			% Plot maximum slope of the falling edge
-			line([falling_edge(yl(1)) falling_edge(yl(2))], yl, 'LineStyle','-', 'Color',[0,1,0]);
+			line(ax, [falling_edge(yl(1)) falling_edge(yl(2))], yl, 'LineStyle','-', 'Color',[0,1,0]);
 		end
 
 		% Plot simulation
-		plot(info.t_sim, info.data_sim, 'r-');
+		plot(ax, info.t_sim, info.data_sim, 'r-');
 
 		% Pure parabola
-		plot(info.t_sim, info.fit_parabola, 'LineStyle','-.', 'Color',[0,1,0]);
+		plot(ax, info.t_sim, info.fit_parabola, 'LineStyle','-.', 'Color',[0,1,0]);
 
 		if isfinite(info.t_event)
 			% Onset time:
-			line([info.t_event info.t_event], ylim, 'LineStyle','--', 'Color',[0,.5,0]);
+			line(ax, [info.t_event info.t_event], ax.YLim, 'LineStyle','--', 'Color',[0,.5,0]);
 		end
 
 	case 2 % kink_parabola
-		yl = ylim;
+		yl = ax.YLim;
 
 		% Plot maximum slope of the rising edge
-		line([rising_edge(yl(1)) rising_edge(yl(2))], yl, 'LineStyle','-', 'Color',[0,1,0]);
+		line(ax, [rising_edge(yl(1)) rising_edge(yl(2))], yl, 'LineStyle','-', 'Color',[0,1,0]);
 
 		if isfinite(info.t_event)
 			% Plot maximum slope of the falling edge
-			line([falling_edge(yl(1)) falling_edge(yl(2))], yl, 'LineStyle','-', 'Color',[0,1,0]);
+			line(ax, [falling_edge(yl(1)) falling_edge(yl(2))], yl, 'LineStyle','-', 'Color',[0,1,0]);
 		end
 
 		% Plot simulation
-		plot(info.t_sim, info.data_sim, 'r-');
+		plot(ax, info.t_sim, info.data_sim, 'r-');
 
 		% Pure parabola
-		plot(info.t_sim, info.fit_parabola, 'LineStyle','-.', 'Color',[0,1,0]);
+		plot(ax, info.t_sim, info.fit_parabola, 'LineStyle','-.', 'Color',[0,1,0]);
 
 		if isfinite(info.t_event)
 			% Onset time:
-			line([info.t_event info.t_event], ylim, 'LineStyle','--', 'Color',[0,.5,0]);
+			line(ax, [info.t_event info.t_event], ax.YLim, 'LineStyle','--', 'Color',[0,.5,0]);
 		end
 
 	case 3 % mRNA transfection
 
 		if isfinite(info.t_event)
 			% Horizontal line:
-			line(xlim, [info.data_sim(1) info.data_sim(1)], 'LineStyle', '-', 'Color', [0,1,0]);
+			line(ax, ax.XLim, [info.data_sim(1) info.data_sim(1)], 'LineStyle', '-', 'Color', [0,1,0]);
 		end
 
-		yl = ylim;
+		yl = ax.YLim;
 
 		% Rising edge:
-		line([rising_edge(yl(1)) rising_edge(yl(2))], yl, 'LineStyle','-', 'Color',[0,1,0]);
+		line(ax, [rising_edge(yl(1)) rising_edge(yl(2))], yl, 'LineStyle','-', 'Color',[0,1,0]);
 
 		% Plot simulation
-		plot(info.t_sim, info.data_sim, 'r-');
+		plot(ax, info.t_sim, info.data_sim, 'r-');
 
 		if isfinite(info.t_event)
 			% Onset time:
-			line([info.t_event info.t_event], ylim, 'LineStyle', '--', 'Color', [0,.5,0]);
+			line(ax, [info.t_event info.t_event], ax.YLim, 'LineStyle', '--', 'Color', [0,.5,0]);
 		end
 
 	case 4 % min between peaks (see postproc_LATE_decay)
-
-		yl = ylim;
+		yl = ax.YLim;
 
 		% Rising edge:
-		line([rising_edge(yl(1)) rising_edge(yl(2))], yl, 'LineStyle','-', 'Color',[0,1,0]);
+		line(ax, [rising_edge(yl(1)) rising_edge(yl(2))], yl, 'LineStyle','-', 'Color',[0,1,0]);
 
 		% Plot simulation
-		plot(info.t_sim, info.data_sim, 'r-');
+		plot(ax, info.t_sim, info.data_sim, 'r-');
 
 		if isfinite(info.t_event)
 			% Onset time:
-			line([info.t_event info.t_event], ylim, 'LineStyle', '--', 'Color', [0,.5,0]);
+			line(ax, [info.t_event info.t_event], ax.YLim, 'LineStyle', '--', 'Color', [0,.5,0]);
 		end
 
 	otherwise
@@ -164,13 +164,17 @@ switch info.fit_type
 		disp([ 'Unknown fit type: ' num2str(info.fit_type) ]);
 
 		% Plot simulation
-		plot(info.t_sim, info.data_sim, 'r-');
+		plot(ax, info.t_sim, info.data_sim, 'r-');
 end
 
 % Plot labels and print
-title([info.marker ' Fluorescence in Cell ' num2str(info.index)]);
-xlabel(['Time ' info.t_unit]); xlim([0,max(info.t)]);
-ylabel('Fluorescence Intensity [a.u.]');
+title(ax, [info.marker ' Fluorescence in Cell ' num2str(info.index)]);
+xlabel(ax, ['Time ' info.t_unit]);
+ylabel(ax, 'Fluorescence Intensity [a.u.]');
+
+ax.Box = 'on';
+ax.XLim = [0, max(info.t)];
+
 set(fh, 'PaperUnits','centimeters', 'PaperSize',[10 7], 'PaperPosition',[0 0 10 7])
 print(fh, '-dpdf', fullfile(info.target_dir, strcat(info.name, '_DEBUG_', ...
 	num2str(info.index, info.format_cell_number), '_', info.time_now, '.pdf')));
