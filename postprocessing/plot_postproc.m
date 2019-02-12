@@ -159,6 +159,37 @@ switch info.fit_type
 			line(ax, [info.t_event info.t_event], ax.YLim, 'LineStyle', '--', 'Color', [0,.5,0]);
 		end
 
+	case {5, -5} % interactive TMRM model
+
+		% Plot simulation
+		plot(ax, info.t_sim, info.data_sim, 'r-');
+
+		% Save y limits for restoring later
+		yl = ax.YLim;
+
+		% Plot parabola
+		parabola = parabola_TMRM_simulate(info.t_sim, info.params, 'parabola');
+		parabola((parabola > yl(2)) & (parabola < yl(1))) = NaN;
+		plot(ax, info.t_sim, parabola, 'LineStyle', '-.', 'Color', [0,1,0]);
+
+		% Display fit limits
+		t_start = info.params(7);
+		t_end = info.params(8);
+		if isfinite(t_start)
+			line(ax, [t_start t_start], yl, 'LineStyle', ':', 'Color', 'k');
+		end
+		if isfinite(t_end)
+			line(ax, [t_end t_end], yl, 'LineStyle', ':', 'Color', 'k');
+		end
+
+		% Breakdown time
+		if isfinite(info.t_event)
+			line(ax, [info.t_event info.t_event], yl, 'LineStyle', '--', 'Color', [0,.5,0]);
+		end
+
+		% Restore y limits
+		ax.YLim = yl;
+
 	otherwise
 		% Fit type not defined
 		disp([ 'Unknown fit type: ' num2str(info.fit_type) ]);

@@ -1,4 +1,4 @@
-function Y = parabola_TMRM_simulate(t, params)
+function Y = parabola_TMRM_simulate(t, params, component)
 %DOUBLEPARABOLA_TMRM_SIMULATE model function for interactive TMRM model
 %
 % The model function consists of a parabolic part. At time `t_break`, the
@@ -17,8 +17,9 @@ function Y = parabola_TMRM_simulate(t, params)
 %	params(8)	t_end		End of relevant data interval
 %
 % Arguments:
-%	t		Time vector (in hours)
-%	params	Parameter vector
+%	t			Time vector (in hours)
+%	params		Parameter vector
+%	component	(optional) string indicating single component to plot
 %
 % Returns:
 %	Vector of calculated values
@@ -54,6 +55,19 @@ y_end = params(6);
 % Specify valid time range
 t_start = params(7);
 t_end = params(8);
+
+% If requested, compute single component
+if nargin >= 3
+	switch component
+		case 'parabola'
+			Y = parabola(t);
+		case 'decay'
+			Y = decay(t);
+		otherwise
+			error('Unknown component: %s', component);
+	end
+	return
+end
 
 %% Calculation
 Y = zeros(size(t));

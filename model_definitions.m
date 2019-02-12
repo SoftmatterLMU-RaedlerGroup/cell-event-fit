@@ -179,6 +179,7 @@ elseif regexpi(modelname, '^tmrm_?i(?:nter(?:active)?)?$')
 	model.marker = 'TMRM';
 	model.simulate = @parabola_TMRM_simulate;
 	model.interactive = @parabola_TMRM_interactive;
+	model.postproc = @postproc_parabola_TMRM;
 	model.n_starts = 1;
 	model.par_num = 8;
 	model.par_min = [-100,-10,-1000, 0,.01,-1000,0,30];

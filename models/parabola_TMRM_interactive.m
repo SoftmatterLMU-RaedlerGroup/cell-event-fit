@@ -36,12 +36,6 @@ function [is_to_fit, S_inter, data_indices, par_fun, private] = ...
 data_indices = [];
 par_fun = [];
 
-if isempty(private)
-	private = 0;
-else
-	private = private + 1;
-end
-
 if isempty(S)
 	is_to_fit = true;
 	S_inter = [];
@@ -68,7 +62,12 @@ have_results_changed = false;
 
 index_F = mf.index_F(idx, 1);
 
-t_event = S.params(4);
+if isfield('t_event', S)
+	t_event = S.t_event;
+else
+	t_event = S.params(4);
+end
+
 t_start = S.params(7);
 t_end = S.params(8);
 
@@ -135,9 +134,6 @@ xlabel(ax, 'Time [h]');
 ylabel(ax, 'Flurescence [a.u.]');
 title(ax, sprintf('Trace %d [Model: %s]', index_F, model.name));
 
-text(ax, mean(ax.XLim), ax.YLim(2), sprintf('private=%d', private), ...
-	'HorizontalAlignment', 'center', 'VerticalAlignment', 'top');
-
 % Display initial limits, if defined
 if isfinite(t_start) && (t_start > ax.XLim(1))
 	p_before.Position = [ax.XLim(1), ax.YLim(1), t_start - ax.XLim(1), diff(ax.YLim)];
@@ -155,7 +151,9 @@ switch selected_action
 		is_to_fit = false;
 		S_inter.t_event = single(t_event);
 		if have_results_changed
-			S_inter.params = NaN(1, model.par_num, 'single');
+			S_inter.params = single(S.params);
+			S_inter.params(7) = t_start;
+			S_inter.params(8) = t_end;
 			S_inter.logPost = NaN('single');
 			S_inter.fit_type = -5;
 		else
@@ -190,7 +188,9 @@ switch selected_action
 		is_to_fit = false;
 		S_inter.t_event = NaN('single');
 		if have_results_changed
-			S_inter.params = NaN(1, model.par_num, 'single');
+			S_inter.params = single(S.params);
+			S_inter.params(7) = t_start;
+			S_inter.params(8) = t_end;
 			S_inter.logPost = NaN('single');
 			S_inter.fit_type = -5;
 		else
