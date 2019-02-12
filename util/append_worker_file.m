@@ -140,9 +140,9 @@ else
 		len_custom = max(len_lbl, len_val);
 		wf.custom_data_map = uint32([1, len_custom]);
 		wf.custom_data_labels = zeros(len_custom, 1, 'int32');
-		wf.custom_data_labels(1:len_lbl, 1) = custom_data_labels;
+		wf.custom_data_labels(1:len_lbl, 1) = int32(custom_data_labels);
 		wf.custom_data_values = NaN(len_custom, 1, 'single');
-		wf.custom_data_values(1:len_val, 1) = custom_data_values;
+		wf.custom_data_values(1:len_val, 1) = single(custom_data_values);
 	end
 end
 

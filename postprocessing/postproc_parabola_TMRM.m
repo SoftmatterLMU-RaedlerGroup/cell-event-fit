@@ -44,8 +44,11 @@ function varargout = postproc_parabola_TMRM(~, ~, R)
 min_decay_steepness = 0.1;
 min_limit_dist = .25;
 min_breakdown_amp = .05 * R.amplitude;
+min_deriv_change = 3;
 
 %% Test breakdown time
+a_parab = R.params(1);
+x_parab = R.params(2);
 t_breakdown = R.params(4);
 a_break = R.params(5);
 y_end = R.params(6);
@@ -53,23 +56,30 @@ t_start = R.params(7);
 t_end = R.params(8);
 y_break = parabola_TMRM_simulate(t_breakdown, R.params);
 
+
+breakdown_deriv = -a_break * (y_break - y_end);
+parab_deriv = 2 * a_parab * (t_breakdown - x_parab);
+deriv_change = parab_deriv - breakdown_deriv;
+
 if a_break < min_decay_steepness
 	% Decay must be steep enough
 	t_breakdown = NaN;
-
-elseif max(abs([t_start t_end] - t_breakdown)) < min_limit_dist
-	% Breakdown must be far enough from fitting interval
+	
+elseif t_breakdown < t_start + min_limit_dist || t_breakdown > t_end - min_limit_dist
+	% Breakdown must be within limit
 	t_breakdown = NaN;
 
 elseif y_break - y_end < min_breakdown_amp
 	% Breakdown must be high enough
 	t_breakdown = NaN;
+	
+elseif deriv_change < min_deriv_change
+	% Too small change in derivative at breakdown
+	t_breakdown = Inf;
 end
 
 %% Calculate breakdown derivative
-if isfinite(t_breakdown)
-	breakdown_deriv = -a_break * (y_break - y_end);
-else
+if ~isfinite(t_breakdown)
 	breakdown_deriv = NaN;
 end
 
@@ -89,6 +99,6 @@ end
 
 % Custom data
 if nargout > 3
-	varargout{4} = [];
-	varargout{5} = [];
+	varargout{4} = 1;
+	varargout{5} = deriv_change;
 end

@@ -185,6 +185,10 @@ switch info.fit_type
 		% Breakdown time
 		if isfinite(info.t_event)
 			line(ax, [info.t_event info.t_event], yl, 'LineStyle', '--', 'Color', [0,.5,0]);
+			text(ax, info.t(end), yl(2), ...
+				sprintf('t_{breakdown}=%.2fh', info.t_event), ...
+				'HorizontalAlignment', 'right', 'VerticalAlignment', 'top', ...
+				'FontSize', 8);
 		end
 
 		% Restore y limits

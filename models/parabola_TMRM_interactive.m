@@ -52,17 +52,30 @@ selected_action = ACTION_ACCEPT;
 have_results_changed = false;
 
 % DEBUG
-% M = matfile('debug_inter.mat');
-% M.idx = idx;
-% M.t = t;
-% M.data = data;
-% M.model = model;
-% M.S = S;
-% M.mf = struct('index_F', mf.index_F);
+% debug_mat = 'debug_inter.mat';
+% if ~exist(debug_mat, 'file')
+% 	M = matfile(debug_mat);
+% 	M.idx = idx;
+% 	M.t = t;
+% 	M.data = data;
+% 	M.model = model;
+% 	M.S = S;
+% 	M.mf = struct( ...
+% 		'index_F', mf.index_F, ...
+% 		'file_ind', mf.file_ind, ...
+% 		'name_F', mf.name_F, ...
+% 		'name_F_ind', mf.name_F_ind, ...
+% 		'name_F_len', mf.name_F_len, ...
+% 		'size_F', mf.size_F ...
+% 		);
+% end
 
 index_F = mf.index_F(idx, 1);
+file_ind = mf.file_ind(idx, 1);
+filename = mf.name_F(mf.name_F_ind(file_ind,1), 1:mf.name_F_len(file_ind,1));
+size_F = mf.size_F(file_ind, 1);
 
-if isfield('t_event', S)
+if isfield(S, 't_event')
 	t_event = S.t_event;
 else
 	t_event = S.params(4);
@@ -132,7 +145,15 @@ p_after = rectangle('Parent', ax, 'FaceColor', [.2 .2 .2 .3], 'EdgeColor', 'none
 
 xlabel(ax, 'Time [h]');
 ylabel(ax, 'Flurescence [a.u.]');
-title(ax, sprintf('Trace %d [Model: %s]', index_F, model.name));
+title(ax, sprintf('Model: %s\nFile: %s [Trace %0*d]', ...
+	model.name, filename, floor(log10(double(size_F)))+1, index_F), ...
+	'Interpreter', 'none');
+
+% DEBUG: display derivative change at breakdown
+p_info = text(ax, ax.XLim(2), ax.YLim(2), '', ...
+	'HorizontalAlignment', 'right', 'VerticalAlignment', 'top', ...
+	'FontSize', 10);
+update_info_msg();
 
 % Display initial limits, if defined
 if isfinite(t_start) && (t_start > ax.XLim(1))
@@ -171,10 +192,12 @@ switch selected_action
 		params(8) = t_end;
 
 		par_min = model.par_min;
+		par_min(4) = t_start;
 		par_min(7) = t_start;
 		par_min(8) = t_end;
 
 		par_max = model.par_max;
+		par_max(4) = t_end;
 		par_max(7) = t_start;
 		par_max(8) = t_end;
 		par_fun = @(~,~,~) struct( ...
@@ -182,7 +205,6 @@ switch selected_action
 			'min', par_min, ...
 			'max', par_max);
 		data_indices = find((t >= t_start) & (t <= t_end));
-		disp(data_indices)
 
 	case ACTION_DISCARD
 		is_to_fit = false;
@@ -221,7 +243,7 @@ end
 		% Callback for mouse motion events
 		mx = ax.CurrentPoint(1, 1);
 		my = ax.CurrentPoint(1, 2);
-		delta = 0.01 * diff(ax.XLim);
+		delta = 0.02 * diff(ax.XLim);
 
 		% Check mouse position relative to limits
 		if mx >= ax.XLim(1) && mx <= ax.XLim(2) && my >= ax.YLim(1) && my <= ax.YLim(2)
@@ -244,6 +266,7 @@ end
 				t_event = NaN;
 			end
 			p_evt.XData = [t_event, t_event];
+			update_info_msg();
 			check_param_change();
 
 		elseif current_state == STATE_START
@@ -374,6 +397,12 @@ end
 				btn_refit.Enable = 'off';
 			end
 		end
+	end
+
+	function update_info_msg()
+		% Update info message in upper right corner
+		p_info.String = sprintf('t_{event} = %.2f\n\\Delta = %.2f', ...
+			t_event, S.custom_data_values(1));
 	end
 
 end
