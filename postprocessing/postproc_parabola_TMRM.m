@@ -42,7 +42,7 @@ function varargout = postproc_parabola_TMRM(~, ~, R)
 
 %% Define thresholds
 min_decay_steepness = 0.1;
-min_limit_dist = .25;
+min_limit_dist = .1;
 min_breakdown_amp = .05 * R.amplitude;
 min_deriv_change = 3;
 
