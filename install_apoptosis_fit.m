@@ -18,6 +18,6 @@
 % You should have received a copy of the GNU General Public License
 % along with this program. If not, see <https://www.gnu.org/licenses/>.
 base_dir = fileparts(mfilename('fullpath'));
-sub_dirs = {'from_PESTO'; 'postprocessing'; 'preprocessing'; 'simulation'; 'util'};
+sub_dirs = {'from_PESTO'; 'models'; 'postprocessing'; 'preprocessing'; 'simulation'; 'util'};
 new_dirs = [ base_dir; fullfile(base_dir, sub_dirs) ];
 addpath(new_dirs{:});

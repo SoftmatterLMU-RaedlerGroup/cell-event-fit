@@ -145,7 +145,7 @@ elseif strcmpi(modelname, 'mRNA')
 	model.par_log = true;
 	model.weights = struct('parameter', 6);
 	model.par_names = {'\text{os}';'\text{sc}';'\delta';'\beta';'t_0';'\sigma'};
-	
+
 elseif regexpi(modelname, '^cal(?:cium)?(?:520)?')
 	% Calcium marker
 	model.name = 'Calcium';
@@ -160,6 +160,43 @@ elseif regexpi(modelname, '^cal(?:cium)?(?:520)?')
 	model.par_log = true;
 	model.weights = struct('parameter', 10);
 	model.par_names = {'C_0';'C_0^\text{amp}';'A';'B';'t_0';'a_1';'a_2';'b_1';'b_2';'\sigma'};
+
+elseif strcmp(modelname, 'Test')
+	% Test (linear function)
+	model.name = 'Test_linear';
+	model.marker = 'line';
+	model.simulate = @(t, p) p(1)*t+p(2);
+	model.par_num = 2;
+	model.par_min = [-100,-100];
+	model.par_max = [+100,+100];
+	model.par_log = false;
+	model.weights = 1;
+	model.par_names = {'a','b'};
+
+elseif regexpi(modelname, '^tmrm_?i(?:nter(?:active)?)?$')
+	% New TMRM model
+	model.name = 'TMRM interactive';
+	model.marker = 'TMRM';
+	model.simulate = @parabola_TMRM_simulate;
+	model.interactive = @parabola_TMRM_interactive;
+	model.n_starts = 1;
+	model.par_num = 8;
+	model.par_min = [-100,-10,-1000, 0,.01,-1000,0,30];
+	model.par_max = [ 100, 40, 1000,30, 10,+1000,0,30];
+	model.par_log = false;
+	model.par_names = {'a_1','x_0','y_0','\tau','a_2','y_\mathrm{end}','t_\mathrm{start}','t_\mathrm{end}'};
+
+elseif regexpi(modelname, '^tmrm_?n(?:ew?)$')
+	% New TMRM model
+	model.name = 'TMRM new';
+	model.marker = 'TMRM';
+	model.simulate = @doubleparabola_TMRM_simulate;
+	model.par_fun = @doubleparabola_TMRM_guess;
+	model.par_num = 11;
+	model.par_min = [.1, 0,-1000, 0,-3,.1, 0,-1000, 0,-3,-1000];
+	model.par_max = [10,30,+1000,30,+3,10,30,+1000,30,+3,+1000];
+	model.par_log = [false,false,false,false,true,false,false,false,false,true,false];
+	model.par_names = {'a_1','x_1','y_1','t_1','s_1','a_2','x_2','y_2','t_2','a_3','y_3'};
 
 else
 	% No model definition found for given model

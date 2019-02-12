@@ -20,7 +20,7 @@ function append_worker_file_old(temp_dir, time_now, worker_id, i, ...
 	fit_parabola)
 %APPEND_WORKER_FILE_OLD appends new data to the worker-specific matfile
 %
-% DEPRECATED. Will soon be removed.
+% DEPRECATED. Will soon be removed. Use `append_worker_file` instead.
 %
 % Input parameters
 % ================

@@ -102,11 +102,11 @@ if argc >= 5
 else
 	outmode_in = {};
 end
-	
-	
+
+
 %% Get model
 if isempty(modelname)
-	modelname = {'Lyso', 'TMRM', 'CellROX', 'Calcium520', 'Caspase', 'pSIVA', 'PI', 'mRNA'};
+	modelname = {'Lyso', 'TMRM', 'TMRM_interactive', 'CellROX', 'Calcium520', 'Caspase', 'pSIVA', 'PI', 'mRNA', 'Test', 'TMRM_new'};
 	modelindex = listdlg('Name', 'Model Missing', ...
 						'PromptString', 'Please select a model:', ...
 						'SelectionMode', 'single', ...
