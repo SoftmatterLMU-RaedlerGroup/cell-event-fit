@@ -102,6 +102,7 @@ fig = figure('MenuBar', 'none', ...
 	'NumberTitle', 'off', ...
 	'Name', 'Fitting result inspection', ...
 	...'WindowStyle', 'modal', ...
+	'CloseRequestFcn', @window_close_btn, ...
 	'Units', 'centimeters' ...
 	);
 fig.InnerPosition(3:4) = [20 + 1.1 * BUTTON_WIDTH, 15];
@@ -192,18 +193,19 @@ switch selected_action
 		params(8) = t_end;
 
 		par_min = model.par_min;
-		par_min(4) = t_start;
+		par_min(4) = max(t_start, min(t));
 		par_min(7) = t_start;
 		par_min(8) = t_end;
 
 		par_max = model.par_max;
-		par_max(4) = t_end;
+		par_max(4) = min(t_end, max(t));
 		par_max(7) = t_start;
 		par_max(8) = t_end;
 		par_fun = @(~,~,~) struct( ...
 			'guess', double(params), ...
 			'min', par_min, ...
-			'max', par_max);
+			'max', par_max, ...
+			'n_starts', 5);
 		data_indices = find((t >= t_start) & (t <= t_end));
 
 	case ACTION_DISCARD
@@ -377,7 +379,7 @@ end
 	function select_action(src, ~, ~)
 		% Callback for action buttons
 		selected_action = src.UserData;
-		close(fig);
+		delete(fig);
 	end
 
 
@@ -403,6 +405,12 @@ end
 		% Update info message in upper right corner
 		p_info.String = sprintf('t_{event} = %.2f\n\\Delta = %.2f', ...
 			t_event, S.custom_data_values(1));
+	end
+
+	function window_close_btn(~,~,~)
+		% Window close callback
+		msgbox('Please choose an action to close this window.', ...
+			'Interactive TMRM fit', 'warn', 'modal');
 	end
 
 end
