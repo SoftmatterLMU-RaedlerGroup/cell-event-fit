@@ -40,7 +40,27 @@ future_map = uint32.empty(0, 1);
 inter_private_map = containers.Map('KeyType','uint32', 'ValueType','any');
 MAX_FUTURES = 100;
 
+is_end_requested = false;
+n_traces_total = length(indices);
+n_traces_left = n_traces_total + 1;
+fig_waitbar = waitbar(0, '', 'Name', 'Interactive fitting', ...
+	'CreateCancelBtn', @cancel_inter);
+update_waitbar();
+
 while ~isempty(indices) || ~isempty(futures)
+	% Check if user cancelled interactive execution
+	if is_end_requested
+		cancel(futures);
+		delete(fig_waitbar);
+		err = struct;
+		err.message = 'User cancelled interactive fitting.';
+		err.identifier = '';
+		err.stack.file = '';
+		err.stack.name = 'interactive fitting';
+		err.stack.line = 0;
+		error(err);
+	end
+
 	% Reset `idx` (index of current trace)
 	idx = [];
 
@@ -105,6 +125,8 @@ while ~isempty(indices) || ~isempty(futures)
 
 	else
 		%% User does not want to fit the data
+		update_waitbar();
+
 		% Delete private data
 		inter_private(idx, []);
 
@@ -126,6 +148,7 @@ while ~isempty(indices) || ~isempty(futures)
 			getResults('custom_data_values', []))
 	end
 end
+delete(fig_waitbar);
 
 
 	function [F, idx_trace] = remove_future(idx)
@@ -178,6 +201,24 @@ end
 		else
 			x = default;
 		end
+	end
+
+	function update_waitbar()
+		% Update progressbar
+		n_traces_left = n_traces_left - 1;
+		if n_traces_left
+			msg = sprintf('%d of %d traces remaining ...', ...
+				n_traces_left, n_traces_total);
+		else
+			msg = 'Completed.';
+		end
+		waitbar(1 - n_traces_left / n_traces_total, fig_waitbar, msg);
+	end
+
+	function cancel_inter(~,~,~)
+		% Cancel interactive function
+		is_end_requested = true;
+		waitbar(1, fig_waitbar, 'Cancelled.');
 	end
 
 end
