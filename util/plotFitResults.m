@@ -282,6 +282,8 @@ for f = first_file_index:ndatafiles
 			%				-2:	nokink_parabola
 			%				3: mRNA transfection
 			%				4: min between peaks
+			%				5: interactive TMRM fit
+			%				-5: interactive TMRM fit (manual adjustment)
 			%				other: currently not defined
 			%	7th column: event slope
 			stat_mat(j,1) = mf.index_F(i,1);

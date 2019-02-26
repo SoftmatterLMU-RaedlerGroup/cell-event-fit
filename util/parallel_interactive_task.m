@@ -276,7 +276,7 @@ function S = parevalfun(index_F, model, t, data, t_sim, par_fun)
 				'amplitude', S.amplitude, 'data_amp', S.data_amp);
 
 		% Run model specific postprocessing routine
-		[t_event, event_deriv, fit_type, custom_data_labels, custom_data_values] = ...
+		[t_event, fit_type, event_deriv, custom_data_labels, custom_data_values] = ...
 			model.postproc(D, F, R);
 
 		% Write postprocessing results to results structure
