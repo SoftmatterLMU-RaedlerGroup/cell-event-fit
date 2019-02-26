@@ -80,6 +80,27 @@ if exist(wfname, 'file')
 	wf.data_sim(1:old_size(1), 1:old_size(2)) = wfo.data_sim;
 	wf.data_sim(1:new_length, total_size(2)) = data_sim;
 
+	len_lbl = length(custom_data_labels);
+	len_val = length(custom_data_values);
+	new_length = max(len_lbl, len_val);
+	old_map_len = size(wfo, 'custom_data_map', 1);
+	wf.custom_data_map = zeros(old_map_len + 1, 2, 'uint32');
+	wf.custom_data_map(1:old_map_len,:) = wfo.custom_data_map;
+	if new_length
+		old_length = size(wfo, 'custom_data_labels', 1);
+		total_length = old_length + new_length;
+		wf.custom_data_map(old_map_len + 1,:) = uint32([old_length+1, total_length]);
+		wf.custom_data_labels = zeros(total_length, 1, 'int32');
+		wf.custom_data_labels(1:old_length,1) = wfo.custom_data_labels;
+		wf.custom_data_labels(old_length+(1:len_lbl),1) = int32(custom_data_labels);
+		wf.custom_data_values = NaN(total_length, 1, 'single');
+		wf.custom_data_values(1:old_length,1) = wfo.custom_data_values;
+		wf.custom_data_values(old_length+(1:len_val),1) = single(custom_data_values);
+	else
+		wf.custom_data_labels = wfo.custom_data_labels;
+		wf.custom_data_values = wfo.custom_data_values;
+	end
+
 	% DEPRECATED: copy rising/falling edge and fit parabola data
 	if ~isempty(who(wfo, 'rising_edge_xoff'))
 		wf.rising_edge_xoff = wfo.rising_edge_xoff;

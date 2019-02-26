@@ -122,17 +122,18 @@ for f = 0:nWorkers
 		mf.params(j, 1:size(wf.params, 2)) = wf.params(i,:);
 
 		if numel(who(wf, 'custom_data_map', 'custom_data_labels', 'custom_data_values')) == 3
-			old_custom_len = size(mf, 'custom_data_labels', 1);
-			new_custom_len = size(wf, 'custom_data_labels', 1);
-			total_custom_len = old_custom_len + new_custom_len;
-
-			wf_custom_map = wf.custom_data_map;
-			mf.custom_data_map(old_custom_len+1:total_custom_len, 1) = ...
-				wf_custom_map(wf_custom_map ~= 0) + old_custom_len;
-			mf.custom_data_labels(old_custom_len+1:total_custom_len, 1) = ...
-				wf.custom_data_labels;
-			mf.custom_data_values(old_custom_len+1:total_custom_len, 1) = ...
-				wf.custom_data_values;
+			custom_range = wf.custom_data_map(i,:);
+			if all(custom_range)
+				old_custom_len = size(mf, 'custom_data_labels', 1);
+				custom_idx = custom_range(1):custom_range(2);
+				new_custom_len = length(custom_idx);
+				total_custom_len = old_custom_len + new_custom_len;
+				mf.custom_data_map(j,:) = uint32([old_custom_len+1, total_custom_len]);
+				mf.custom_data_labels(old_custom_len+1:total_custom_len, 1) = ...
+					wf.custom_data_labels(custom_idx, 1);
+				mf.custom_data_values(old_custom_len+1:total_custom_len, 1) = ...
+					wf.custom_data_values(custom_idx, 1);
+			end
 		end
 
 		% DEPRECATED
