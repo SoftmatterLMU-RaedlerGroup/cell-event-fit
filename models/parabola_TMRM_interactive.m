@@ -144,6 +144,8 @@ p_evt = plot(ax, [t_event t_event], ax.YLim, '-', 'Color', [0 .5 0], 'LineWidth'
 p_before = rectangle('Parent', ax, 'FaceColor', [.2 .2 .2 .3], 'EdgeColor', 'none', 'Visible', 'off');
 p_after = rectangle('Parent', ax, 'FaceColor', [.2 .2 .2 .3], 'EdgeColor', 'none', 'Visible', 'off');
 
+ax.XLim(1) = min(t);
+ax.XLim(2) = max(t);
 xlabel(ax, 'Time [h]');
 ylabel(ax, 'Flurescence [a.u.]');
 title(ax, sprintf('Model: %s\nFile: %s [Trace %0*d]', ...
@@ -189,15 +191,22 @@ switch selected_action
 			params(2) = t_event;
 			params(4) = t_event;
 		end
+		if isfinite(t_end)
+			params(6) = data(find(t <= t_end, 1, 'last'));
+		else
+			params(6) = data(end);
+		end
 		params(7) = t_start;
 		params(8) = t_end;
 
-		par_min = model.par_min;
+		par_lim = model.par_fun(data, t, model);
+		
+		par_min = par_lim.min;
 		par_min(4) = max(t_start, min(t));
 		par_min(7) = t_start;
 		par_min(8) = t_end;
 
-		par_max = model.par_max;
+		par_max = par_lim.max;
 		par_max(4) = min(t_end, max(t));
 		par_max(7) = t_start;
 		par_max(8) = t_end;
@@ -403,8 +412,8 @@ end
 
 	function update_info_msg()
 		% Update info message in upper right corner
-		p_info.String = sprintf('t_{event} = %.2f\n\\Delta = %.2f', ...
-			t_event, S.custom_data_values(1));
+		p_info.String = sprintf('t_{event} = %.2f\n\\delta = %.2f\n\\Delta = %.2f', ...
+			t_event, S.event_deriv/S.amplitude, S.custom_data_values(1));
 	end
 
 	function window_close_btn(~,~,~)

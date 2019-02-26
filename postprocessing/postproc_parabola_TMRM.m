@@ -44,7 +44,7 @@ function varargout = postproc_parabola_TMRM(~, ~, R)
 min_decay_steepness = 0.1;
 min_limit_dist = .1;
 min_breakdown_amp = .05 * R.amplitude;
-min_deriv_change = 3;
+min_deriv_change = .2;
 
 %% Test breakdown time
 a_parab = R.params(1);
@@ -59,7 +59,7 @@ y_break = parabola_TMRM_simulate(t_breakdown, R.params);
 
 breakdown_deriv = -a_break * (y_break - y_end);
 parab_deriv = 2 * a_parab * (t_breakdown - x_parab);
-deriv_change = parab_deriv - breakdown_deriv;
+deriv_change = (parab_deriv - breakdown_deriv) / R.amplitude;
 
 if a_break < min_decay_steepness
 	% Decay must be steep enough
