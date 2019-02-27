@@ -184,7 +184,7 @@ elseif regexpi(modelname, '^tmrm_?i(?:nter(?:active)?)?$')
 	model.n_starts = 1;
 	model.par_num = 8;
 	model.par_min = [-100,-10,-1000, 0,.01,-1000,0,30];
-	model.par_max = [ 100, 40, 1000,30, 10,+1000,0,30];
+	model.par_max = [ 100, 40, 1000,30, 20,+1000,0,30];
 	model.par_log = false;
 	model.par_names = {'a_1','x_0','y_0','\tau','a_2','y_\mathrm{end}','t_\mathrm{start}','t_\mathrm{end}'};
 
