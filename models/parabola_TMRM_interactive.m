@@ -597,14 +597,14 @@ end
 	function check_param_change()
 		% Check if parameters have been changed
 		changed_params = S.params ~= current_params();
-		has_changed = all(changed_params([ones(1, 6, 'logical') ~isnan(t_start) ~isnan(t_end)]));
+		has_changed = any(changed_params([ones(1, 6, 'logical') ~isnan(t_start) ~isnan(t_end)]));
 		if ~has_changed && ( (t_event ~= S.t_event) && ~(isnan(t_event) && isnan(S.t_event)) )
 			has_changed = true;
 		end
-		if ~has_changed && ~(isnan(t_start) && isnan(S.params(7)))
+		if ~has_changed && (isnan(t_start) && isnan(S.params(7)))
 			has_changed = true;
 		end
-		if ~has_changed && ~(isnan(t_end) && isnan(S.params(8)))
+		if ~has_changed && (isnan(t_end) && isnan(S.params(8)))
 			has_changed = true;
 		end
 
