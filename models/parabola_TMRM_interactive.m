@@ -90,6 +90,19 @@ else
 	t_event = t_break;
 end
 
+par_min = model.par_min;
+par_max = model.par_max;
+if isa(model.par_fun, 'function_handle')
+	par_props = model.par_fun(data, t, model);
+	if isfield(par_props, 'min')
+		par_min = par_props.min;
+	end
+	if isfield(par_props, 'max')
+		par_max = par_props.max;
+	end
+end
+
+
 BUTTON_WIDTH = 2.5;
 BUTTON_HEIGHT = 1;
 
@@ -224,12 +237,9 @@ switch selected_action
 	case ACTION_REFIT
 		is_to_fit = true;
 		params = current_params();
-		par_lim = model.par_fun(data, t, model);
-		par_min = par_lim.min;
 		par_min(4) = max(t_start, min(t));
 		par_min(7) = params(7);
 		par_min(8) = params(8);
-		par_max = par_lim.max;
 		par_max(4) = min(t_end, max(t));
 		par_max(7) = params(7);
 		par_max(8) = params(8);
@@ -340,10 +350,10 @@ end
 		elseif current_state == STATE_Y_END
 			dy = (my - mouse_down_info.anchor(2));
 			y_end = mouse_down_info.y_end + dy;
-			if y_end < model.par_min(6)
-				y_end = model.par_min(6);
-			elseif y_end > model.par_max(6)
-				y_end = model.par_max(6);
+			if y_end < par_min(6)
+				y_end = par_min(6);
+			elseif y_end > par_max(6)
+				y_end = par_max(6);
 			end
 			ys = mouse_down_info.y_stop;
 			denom = current_t_stop - t_break + (mx - mouse_down_info.anchor(1))^3;
@@ -351,10 +361,10 @@ end
 				denom = 0;
 			end
 			a_break = - log(abs( (ys + dy - y_end) / (current_y_break - y_end) )) / denom;
-			if a_break < model.par_min(5)
-				a_break = model.par_min(5);
-			elseif a_break > model.par_max(5)
-				a_break = model.par_max(5);
+			if a_break < par_min(5)
+				a_break = par_min(5);
+			elseif a_break > par_max(5)
+				a_break = par_max(5);
 			end
 			update_params();
 
@@ -370,17 +380,17 @@ end
 
 		elseif current_state == STATE_PAR_VTX
 			x0 = mouse_down_info.x0 + mx - mouse_down_info.anchor(1);
-			if x0 < model.par_min(2)
-				x0 = model.par_min(2);
-			elseif x0 > model.par_max(2)
-				x0 = model.par_max(2);
+			if x0 < par_min(2)
+				x0 = par_min(2);
+			elseif x0 > par_max(2)
+				x0 = par_max(2);
 			end
 
 			y0 = mouse_down_info.y0 + my - mouse_down_info.anchor(2);
-			if y0 < model.par_min(3)
-				y0 = model.par_min(3);
-			elseif y0 > model.par_max(3)
-				y0 = model.par_max(3);
+			if y0 < par_min(3)
+				y0 = par_min(3);
+			elseif y0 > par_max(3)
+				y0 = par_max(3);
 			end
 			update_params;
 
