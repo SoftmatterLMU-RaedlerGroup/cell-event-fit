@@ -175,10 +175,10 @@ switch info.fit_type
 		% Display fit limits
 		t_start = info.params(7);
 		t_end = info.params(8);
-		if isfinite(t_start)
+		if isfinite(t_start) && t_start > min(info.t)
 			line(ax, [t_start t_start], yl, 'LineStyle', ':', 'Color', 'k');
 		end
-		if isfinite(t_end)
+		if isfinite(t_end) && t_end < max(info.t)
 			line(ax, [t_end t_end], yl, 'LineStyle', ':', 'Color', 'k');
 		end
 
