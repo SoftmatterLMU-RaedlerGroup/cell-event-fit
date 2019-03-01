@@ -253,9 +253,14 @@ switch selected_action
 	case ACTION_DISCARD
 		is_to_fit = false;
 		S_inter.t_event = NaN('single');
+		S_inter.event_deriv = NaN;
+		S_inter.params = single(current_params());
+		S_inter.params(7) = min(t);
+		S_inter.params(8) = max(t);
 		if have_results_changed
-			S_inter.params = single(current_params());
 			S_inter.logPost = NaN('single');
+			S_inter.custom_data_values(1) = current_deriv_change;
+			S_inter.amplitude = current_amplitude;
 			S_inter.fit_type = -5;
 		else
 			S_inter.fit_type = 5;
@@ -285,7 +290,7 @@ end
 		% Callback for mouse motion events
 		mx = ax.CurrentPoint(1, 1);
 		my = ax.CurrentPoint(1, 2);
-		deltax = 0.02 * diff(ax.XLim);
+		deltax = 0.01 * diff(ax.XLim);
 		deltay = 0.02 * diff(ax.YLim);
 
 		% Check mouse position relative to limits
@@ -348,23 +353,34 @@ end
 			update_params();
 
 		elseif current_state == STATE_Y_END
-			dy = (my - mouse_down_info.anchor(2));
-			y_end = mouse_down_info.y_end + dy;
+			if my < ax.YLim(1)
+				y = ax.YLim(1);
+			elseif my > ax.YLim(2)
+				y = ax.YLim(2);
+			else
+				y = my;
+			end
+			dec_exp = exp(-a_break * (current_t_stop - t_break));
+			y_end = (y - current_y_break * dec_exp) / (1 - dec_exp);
 			if y_end < par_min(6)
 				y_end = par_min(6);
 			elseif y_end > par_max(6)
 				y_end = par_max(6);
 			end
-			ys = mouse_down_info.y_stop;
-			denom = current_t_stop - t_break + (mx - mouse_down_info.anchor(1))^3;
-			if denom < 0
-				denom = 0;
+			dx = (mx - mouse_down_info.anchor(1));
+			if dx < -1
+				dx = -.5 - log(-dx);
+			else
+				dx = sign(dx) * .5 * dx^2;
 			end
-			a_break = - log(abs( (ys + dy - y_end) / (current_y_break - y_end) )) / denom;
-			if a_break < par_min(5)
-				a_break = par_min(5);
-			elseif a_break > par_max(5)
-				a_break = par_max(5);
+			denom = (mouse_down_info.t_half - t_break + dx);
+			if denom > 0
+				a_break = log(2) / denom;
+				if a_break < par_min(5)
+					a_break = par_min(5);
+				elseif a_break > par_max(5)
+					a_break = par_max(5);
+				end
 			end
 			update_params();
 
@@ -445,8 +461,7 @@ end
 				current_state = STATE_END;
 			case STATE_PRE_Y_END
 				current_state = STATE_Y_END;
-				mouse_down_info.y_end = y_end;
-				mouse_down_info.y_stop = current_y_stop;
+				mouse_down_info.t_half = t_break + log(2) / a_break;
 			case STATE_PRE_BREAK
 				current_state = STATE_BREAK;
 				switch_event();
