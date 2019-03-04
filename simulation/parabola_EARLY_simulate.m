@@ -1,5 +1,5 @@
-function Y = parabola_TMRM_simulate(t, params, component)
-%DOUBLEPARABOLA_TMRM_SIMULATE model function for interactive TMRM model
+function Y = parabola_EARLY_simulate(t, params, component)
+%DOUBLEPARABOLA_EARLY_SIMULATE model function for interactive early marker model
 %
 % The model function consists of a parabolic part. At time `t_break`, the
 % function breaks down with an exponential decay to level `y_end`.

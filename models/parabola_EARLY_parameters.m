@@ -1,5 +1,5 @@
-function P = parabola_TMRM_parameters(data, t, model)
-%PARABOLA_TMRM_PARAMETERS defined parameter properties for the parabola TMRM model
+function P = parabola_EARLY_parameters(data, t, model)
+%PARABOLA_EARLY_PARAMETERS defined parameter properties for the parabola EARLY model
 %
 % Copyright © 2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
 % Faculty of Physics / Ludwig-Maximilians-Universität München

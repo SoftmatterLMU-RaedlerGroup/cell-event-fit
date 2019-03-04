@@ -1,5 +1,5 @@
-function varargout = postproc_parabola_TMRM(~, ~, R)
-% This function contains the postprocessing routine for TMRM_interactive.
+function varargout = postproc_parabola_EARLY(~, ~, R)
+% This function contains the postprocessing routine for the interactive early marker model.
 %
 % Required arguments:
 % ===================
@@ -54,7 +54,7 @@ a_break = R.params(5);
 y_end = R.params(6);
 t_start = R.params(7);
 t_end = R.params(8);
-y_break = parabola_TMRM_simulate(t_breakdown, R.params);
+y_break = parabola_EARLY_simulate(t_breakdown, R.params);
 
 
 breakdown_deriv = -a_break * (y_break - y_end);
@@ -89,7 +89,7 @@ varargout{1} = t_breakdown;
 
 % Fit type
 if nargout > 1
-	varargout{2} = int8(5); % type: parabola_TMRM
+	varargout{2} = int8(5); % type: parabola_EARLY
 end
 
 % Linear parameter of parabola in normal form

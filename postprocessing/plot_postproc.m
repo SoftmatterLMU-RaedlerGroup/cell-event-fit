@@ -159,7 +159,7 @@ switch info.fit_type
 			line(ax, [info.t_event info.t_event], ax.YLim, 'LineStyle', '--', 'Color', [0,.5,0]);
 		end
 
-	case {5, -5} % interactive TMRM model
+	case {5, -5} % interactive EARLY model
 
 		% Plot simulation
 		plot(ax, info.t_sim, info.data_sim, 'r-');
@@ -168,7 +168,7 @@ switch info.fit_type
 		yl = ax.YLim;
 
 		% Plot parabola
-		parabola = parabola_TMRM_simulate(info.t_sim, info.params, 'parabola');
+		parabola = parabola_EARLY_simulate(info.t_sim, info.params, 'parabola');
 		parabola((parabola > yl(2)) & (parabola < yl(1))) = NaN;
 		plot(ax, info.t_sim, parabola, 'LineStyle', '-.', 'Color', [0,1,0]);
 

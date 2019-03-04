@@ -174,13 +174,28 @@ elseif strcmp(modelname, 'Test')
 	model.par_names = {'a','b'};
 
 elseif regexpi(modelname, '^tmrm_?i(?:nter(?:active)?)?$')
-	% New TMRM model
+	% New, interactive TMRM model
 	model.name = 'TMRM interactive';
 	model.marker = 'TMRM';
-	model.simulate = @parabola_TMRM_simulate;
-	model.interactive = @parabola_TMRM_interactive;
-	model.par_fun = @parabola_TMRM_parameters;
-	model.postproc = @postproc_parabola_TMRM;
+	model.simulate = @parabola_EARLY_simulate;
+	model.interactive = @parabola_EARLY_interactive;
+	model.par_fun = @parabola_EARLY_parameters;
+	model.postproc = @postproc_parabola_EARLY;
+	model.n_starts = 1;
+	model.par_num = 8;
+	model.par_min = [-100,-10,-1000, 0,.01,-1000,0,30];
+	model.par_max = [ 100, 40, 1000,30, 20,+1000,0,30];
+	model.par_log = false;
+	model.par_names = {'a_1','x_0','y_0','\tau','a_2','y_\mathrm{end}','t_\mathrm{start}','t_\mathrm{end}'};
+
+elseif regexpi(modelname, '^(?:cell)?ro(?:s|x)_?i(?:nter(?:active)?)?$')
+	% New, interactive ROS model
+	model.name = 'ROS interactive';
+	model.marker = 'CellROX';
+	model.simulate = @parabola_EARLY_simulate;
+	model.interactive = @parabola_EARLY_interactive;
+	model.par_fun = @parabola_EARLY_parameters;
+	model.postproc = @postproc_parabola_EARLY;
 	model.n_starts = 1;
 	model.par_num = 8;
 	model.par_min = [-100,-10,-1000, 0,.01,-1000,0,30];

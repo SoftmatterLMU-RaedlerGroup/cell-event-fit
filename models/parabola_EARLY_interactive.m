@@ -1,6 +1,6 @@
 function [is_to_fit, S_inter, data_indices, par_fun, private] = ...
-	parabola_TMRM_interactive(idx, t, data, model, S, mf, private)
-%PARABOLA_TMRM_INTERACTIVE interactive function for TMRM fitting
+	parabola_EARLY_interactive(idx, t, data, model, S, mf, private)
+%PARABOLA_EARLY_INTERACTIVE interactive function for early marker fitting
 %
 % Arguments:
 %	idx			index of current trace (in matfile)
@@ -668,7 +668,7 @@ end
 	function window_close_btn(~,~,~)
 		% Window close callback
 		msgbox('Please choose an action to close this window.', ...
-			'Interactive TMRM fit', 'warn', 'modal');
+			model.name, 'warn', 'modal');
 	end
 
 end
