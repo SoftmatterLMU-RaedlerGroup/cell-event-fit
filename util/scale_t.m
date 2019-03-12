@@ -36,7 +36,10 @@ if nargin < 3
 	f_ind = 0;
 end
 if nargin < 4
+	is_offset_defined = false;
 	t_offset = 0;
+else
+	is_offset_defined = true;
 end
 
 %% Get correct value for t_scale
@@ -47,36 +50,42 @@ elseif length(t_scale) < 1
 end
 
 %% Get correct value for t_offset
-if length(t_offset) > 1
-	try
-		t_offset = t_offset(f_ind);
-	catch
-		error('f_ind musst be an index to t_offset.')
+if is_offset_defined
+	if length(t_offset) > 1
+		try
+			t_offset = t_offset(f_ind);
+		catch
+			error('f_ind musst be an index to t_offset.')
+		end
+	elseif isempty(t_offset)
+		t_offset = 0;
 	end
-elseif isempty(t_offset)
-	t_offset = 0;
 end
 
 %% Calculate t_scaled
 t_scaled = t .* t_scale + t_offset;
-end
 
-function [ t_scale ] = get_t_scale( t )
-%GET_T_SCALE Heuristically finds a scale value for a time vector
-%   t_scale is a heuristically found factor for converting the time
-%	vector t to unit hours:
-%		t .* t_scale = t[h]
 
-t_max = max(t);
+	function [ t_scale ] = get_t_scale( t )
+	%GET_T_SCALE Heuristically finds a scale value for a time vector
+	%   t_scale is a heuristically found factor for converting the time
+	%	vector t to unit hours:
+	%		t .* t_scale = t[h]
 
-if t_max < 50
-	% Assume that t is already in unit 'hours'
-	t_scale = 1;
-elseif t_max < 1000
-	% Assume that t is in unit 'frames', assume frame rate 1/10min
-	t_scale = 1 / 6;
-else
-	% Large values; assume that t is in unit 'seconds'
-	t_scale = 1 / 3600;
-end
-end
+	t_max = max(t);
+
+	if t_max < 50
+		% Assume that t is already in unit 'hours'
+		t_scale = 1;
+	elseif t_max < 1000
+		% Assume that t is in unit 'frames', assume frame rate 1/10min
+		t_scale = 1 / 6;
+		if ~is_offset_defined && t(1) == 1
+			t_offset = -1;
+		end
+	else
+		% Large values; assume that t is in unit 'seconds'
+		t_scale = 1 / 3600;
+	end
+	end % end of `get_t_scale`
+end % end of `scale_t`

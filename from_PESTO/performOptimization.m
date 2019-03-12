@@ -1,7 +1,7 @@
 function [logPost_best, par_best] = performOptimization(parameters, logPosterior, options)
 %performOptimization performs the multistart optimization
 %
-% Copyright © 2018 Daniel Woschée <daniel.woschee@physik.lmu.de>
+% Copyright © 2018-2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
 % Faculty of Physics / Ludwig-Maximilians-Universität München
 %
 % This program is free software; you can redistribute it and/or modify
@@ -37,13 +37,15 @@ end
 
 if ~isfield(parameters, 'guess')
 	parameters.guess = [];
+elseif size(parameters.guess, 1) > options.n_starts
+	options.n_starts = size(parameters.guess, 1);
 end
 
 %% Sampling of starting points
 % Sampling from latin hypercube
 par0 = [parameters.guess; ...
 	bsxfun(@plus, parameters.min, bsxfun(@times, parameters.max - parameters.min, ...
-	lhsdesign(options.n_starts - size(parameters.guess, 2), parameters.number, 'smooth', 'off')))];
+	lhsdesign(options.n_starts - size(parameters.guess, 1), parameters.number, 'smooth', 'off')))];
 
 %% Prepare arrays of optimization results
 logPost_opt = zeros(options.n_starts, 1);

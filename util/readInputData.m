@@ -22,7 +22,7 @@ function [ Ffile ] = readInputData(varargin)
 %	TimeOffset		Numeric vector to be added to time vector (in TimeUnit)
 %					(one global value or vector with an entry per data file)
 %
-% Copyright © 2018 Daniel Woschée <daniel.woschee@physik.lmu.de>
+% Copyright © 2018-2019 Daniel Woschée <daniel.woschee@physik.lmu.de>
 % Faculty of Physics / Ludwig-Maximilians-Universität München
 %
 % This program is free software; you can redistribute it and/or modify
@@ -102,11 +102,11 @@ if argc >= 5
 else
 	outmode_in = {};
 end
-	
-	
+
+
 %% Get model
 if isempty(modelname)
-	modelname = {'Lyso', 'TMRM', 'CellROX', 'Calcium520', 'Caspase', 'pSIVA', 'PI', 'mRNA'};
+	modelname = {'Lyso', 'TMRM', 'TMRM_interactive', 'CellROX', 'CellROX_interactive', 'Calcium520', 'Caspase', 'pSIVA', 'PI', 'mRNA', 'Test', 'TMRM_new'};
 	modelindex = listdlg('Name', 'Model Missing', ...
 						'PromptString', 'Please select a model:', ...
 						'SelectionMode', 'single', ...
@@ -310,6 +310,7 @@ warning('off', 'MATLAB:singularMatrix'); %fmincon
 warning('off', 'MATLAB:mir_warning_maybe_uninitialized_temporary'); %parfor
 
 %% Define model specifications
+has_interactivity = false;
 model_ind(1:ndatafiles,1) = uint8(1);
 
 for imodelname = 1:length(modelname)
@@ -334,7 +335,11 @@ for imodelname = 1:length(modelname)
 	end
 
 	if ~exists_already
-		models(model_index,1) = model;
+		models(model_index, 1) = model;
+
+		if isa(model.interactive, 'function_handle')
+			has_interactivity = true;
+		end
 	end
 
 	model_ind(imodelname) = model_index;
@@ -402,6 +407,7 @@ t_ind(ndatafiles,1) = uint16(0);
 t_sim_ind(ndatafiles,1) = uint16(0);
 t_sim_res(ndatafiles,1) = 0;
 format_cell_number_ind(ndatafiles,1) = uint16(0);
+par_num = zeros(ndatafiles, 1, 'uint8');
 
 size_F(ndatafiles,1) = uint32(0);
 dataindices(ndatafiles,1) = uint32(0);
@@ -434,6 +440,15 @@ for f = 1:ndatafiles
 	name_F_len(f,1) = length(temp_name);
 	[extension_F, extension_F_ind(f)] = mssina(extension_F, temp_ext);
 
+	% Save model name
+	[model_name, model_name_ind(f)] = mssina(model_name, models(model_ind(f)).name);
+	model_name_len(f) = length(models(model_ind(f)).name);
+
+	if models(model_ind(f)).par_num > max_par_num
+		max_par_num(1) = models(model_ind(f)).par_num;
+	end
+	par_num(f) = models(model_ind(f)).par_num;
+
 	% Load data from data file
 	if strcmpi(temp_ext, '.csv') || strcmpi(temp_ext, '.txt')
 		indata = csvread(full_path(full_path_ind(f),:));
@@ -451,9 +466,11 @@ for f = 1:ndatafiles
 	size_F(f) = size(indata, 2) - 1;
 
 	% Ensure that data does not contain negative values
-	data_offset = min(min( indata(:,2:end) ));
-	if data_offset < 0
-		indata(:,2:end) = indata(:,2:end) - data_offset;
+	if models(model_ind(f)).normalize_offset
+		data_offset = min(min( indata(:,2:end) ));
+		if data_offset < 0
+			indata(:,2:end) = indata(:,2:end) - data_offset;
+		end
 	end
 
 	% Compare lengths of data array and current data
@@ -527,9 +544,6 @@ for f = 1:ndatafiles
 	end
 	clear temp_t_sim;
 
-	% Define model
-	%model_ind(f) = 1; % By now only one model per run is supported
-
 	% Prepare target directory
 	if length(out_dir) > 1
 		f_out = f;
@@ -545,14 +559,6 @@ for f = 1:ndatafiles
 	% Prepare format string for cell number in files
 	[format_cell_number, format_cell_number_ind(f)] = mssina( ...
 		format_cell_number, [ '%0' num2str( floor(log10(single(size_F(f)))) + 1 ) 'd' ]);
-
-	% Save model name
-	[model_name, model_name_ind(f)] = mssina(model_name, models(model_ind(f)).name);
-	model_name_len(f) = length(models(model_ind(f)).name);
-
-	if models(model_ind(f)).par_num > max_par_num
-		max_par_num(1) = models(model_ind(f)).par_num;
-	end
 
 	% Allocate memory for array of trace indices
 	if size(dataindices, 2) < size_F(f)
@@ -623,8 +629,8 @@ save(Ffile, ...
 	'full_path_ind', 'name_F_ind', 'name_F_len', 'extension_F_ind', 'target_dir_ind', 'target_dir_len', ...
 	'model_name_ind', 'model_name_len', 't', 't_sim', 't_unit', 'format_cell_number', ...
 	'data_len', 'data_sim_len', 'size_F', 'dataindices', 'model_ind', 'models', ...
-	't_ind', 't_sim_ind', 't_sim_res', 'format_cell_number_ind', ...
-	'data', 'file_ind', 'index_F', ...
+	't_ind', 't_sim_ind', 't_sim_res', 'format_cell_number_ind', 'par_num', ...
+	'data', 'file_ind', 'index_F', 'has_interactivity', ...
 	'outmode', 'time_now', 'temp_dir', ...
 	'ntraces', 'ndatafiles', 'max_par_num', 'log_trace', 'log_file', ...
 	'-v7.3');
