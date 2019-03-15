@@ -66,6 +66,9 @@ have_results_changed = false;
 % 		'name_F', mf.name_F, ...
 % 		'name_F_ind', mf.name_F_ind, ...
 % 		'name_F_len', mf.name_F_len, ...
+%		't_sim', mf.t_sim, ...
+%		'data_sim_len', mf.data_sim_len, ...
+%		't_sim_ind', mf.t_sim_ind, ...
 % 		'size_F', mf.size_F ...
 % 		);
 % end
@@ -220,16 +223,16 @@ switch selected_action
 		is_to_fit = false;
 		S_inter.t_event = single(t_event);
 		if have_results_changed
-			S_inter.params = single(current_params());
-			S_inter.logPost = NaN('single');
-			S_inter.fit_type = -5;
+			update_data_sim()
 			if isfinite(t_event)
 				S_inter.event_deriv = current_break_deriv;
 			else
 				S_inter.event_deriv = NaN;
 			end
-			S_inter.custom_data_values(1) = current_deriv_change;
-			S_inter.amplitude = current_amplitude;
+			S_inter.logPost = NaN('single');
+			S_inter.custom_data_labels(1) = int32(1);
+			S_inter.custom_data_values(1) = single(current_deriv_change);
+			S_inter.fit_type = -5;
 		else
 			S_inter.fit_type = 5;
 		end
@@ -252,19 +255,19 @@ switch selected_action
 
 	case ACTION_DISCARD
 		is_to_fit = false;
-		S_inter.t_event = NaN('single');
-		S_inter.event_deriv = NaN;
-		S_inter.params = single(current_params());
-		S_inter.params(7) = min(t);
-		S_inter.params(8) = max(t);
 		if have_results_changed
 			S_inter.logPost = NaN('single');
-			S_inter.custom_data_values(1) = current_deriv_change;
-			S_inter.amplitude = current_amplitude;
+			S_inter.custom_data_labels(1) = int32(1);
+			S_inter.custom_data_values(1) = single(current_deriv_change);
+			update_data_sim()
+			S_inter.params(7) = min(t);
+			S_inter.params(8) = max(t);
 			S_inter.fit_type = -5;
 		else
 			S_inter.fit_type = 5;
 		end
+		S_inter.t_event = NaN('single');
+		S_inter.event_deriv = NaN;
 end
 
 
@@ -671,4 +674,20 @@ end
 			model.name, 'warn', 'modal');
 	end
 
+	function update_data_sim()
+		% Populate `S_inter` with new fitted function
+		t_sim = mf.t_sim(1:mf.data_sim_len(file_ind,1), mf.t_sim_ind(file_ind,1));
+		cur_par = current_params();
+		data_sim = model.simulate(t_sim, cur_par);
+		[max_val, max_ind] = max(data_sim);
+		[min_val, min_ind] = min(data_sim);
+		amplitude = max_val - min_val;
+		S_inter.params = single(cur_par);
+		S_inter.data_sim = single(data_sim);
+		S_inter.max_val = single(max_val);
+		S_inter.max_ind = uint32(max_ind);
+		S_inter.min_val = single(min_val);
+		S_inter.min_ind = uint32(min_ind);
+		S_inter.amplitude = single(amplitude);
+	end
 end
