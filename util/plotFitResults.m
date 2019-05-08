@@ -116,6 +116,7 @@ elseif ~is_start_defined
 
 			elseif strcmpi(log.kind, 'file')
 				% `plot.log` specifies file
+				first_trace_index = inf;
 				first_file_index = index;
 				is_valid_log = true;
 			end
@@ -165,192 +166,203 @@ if first_trace_index ~= 1 || first_file_index ~= 1
 end
 
 %% Plot the single cell data
-for d = first_trace_index:ntraces
+if first_trace_index <= ntraces
+	for d = first_trace_index:ntraces
 
-	% Write log file
-	write_plot_log(sprintf('Plotting trace: %d\n', d));
+		% Write log file
+		write_plot_log(sprintf('Plotting trace: %d\n', d));
 
-	% Get data from matfile
-	f = mf.file_ind(d,1);
-	model = mf.models(mf.model_ind(f,1),1);
+		% Get data from matfile
+		f = mf.file_ind(d,1);
+		model = mf.models(mf.model_ind(f,1),1);
 
-	% Ensure that target directory exists
-	target_dir = mf.target_dir(mf.target_dir_ind(f,1),1:mf.target_dir_len(f,1));
-	if ~exist(target_dir, 'dir')
-		mkdir(target_dir);
-	end
-
-	%% Print postprocessing and prepare state matrix
-	if outmode.debug
-
-		% Make options structure
-		info = struct( ...
-			'name',		mf.name_F(mf.name_F_ind(f,1),1:mf.name_F_len(f,1)), ...
-			'target_dir',	target_dir, ...
-			't',		mf.t(1:mf.data_len(f,1), mf.t_ind(f,1)), ...
-			't_sim',	mf.t_sim(1:mf.data_sim_len(f,1), mf.t_sim_ind(f,1)), ...
-			't_unit',	mf.t_unit, ...
-			'data',		mf.data(1:mf.data_len(f,1),d), ...
-			'data_sim',	mf.data_sim(1:mf.data_sim_len(f,1), d), ...
-			'noise',	mf.min_val(d,1) + mf.noise(f,1), ...
-			'params',	mf.params(d, 1:mf.par_num(f,1)), ...
-			't_event',	mf.t_event(d,1), ...
-			'fit_type',	mf.fit_type(d,1), ...
-			'rising_edge_xoff',		mf.rising_edge_xoff(d,1), ...
-			'rising_edge_yoff',		mf.rising_edge_yoff(d,1), ...
-			'rising_edge_scale',	mf.rising_edge_scale(d,1), ...
-			'falling_edge_xoff',	mf.falling_edge_xoff(d,1), ...
-			'falling_edge_yoff',	mf.falling_edge_yoff(d,1), ...
-			'falling_edge_scale',	mf.falling_edge_scale(d,1), ...
-			'index',				mf.index_F(d,1), ...
-			'marker',				model.marker, ...
-			'format_cell_number',	mf.format_cell_number(mf.format_cell_number_ind(f,1),:), ...
-			'time_now',				mf.time_now ...
-			);
-
-		if mf.fit_parabola_ind(d,1)
-			info.fit_parabola = mf.fit_parabola(1:mf.data_sim_len(f,1), mf.fit_parabola_ind(d,1));
-		else
-			info.fit_parabola = NaN(mf.data_sim_len(f,1), 1);
+		% Ensure that target directory exists
+		target_dir = mf.target_dir(mf.target_dir_ind(f,1),1:mf.target_dir_len(f,1));
+		if ~exist(target_dir, 'dir')
+			mkdir(target_dir);
 		end
 
-		% Print postprocessing results
-		plot_postproc(info);
-	end
+		%% Print postprocessing and prepare state matrix
+		if outmode.debug
 
-	% Plot the multistart results
-	if outmode.ms && mf.fh_MS_ind(d,1) && isgraphics(mf.fh_MS(mf.fh_MS_ind(d,1),1))
-		fh_MS = mf.fh_MS(mf.fh_MS_ind(d,1),1);
-		set(fh_MS, 'PaperUnits','centimeters', 'PaperSize',[25 15], 'PaperPosition',[0 0 25 15])
-		print(fh_MS, '-dpdf', fullfile(target_dir, ...
-			strcat(mf.name_F(mf.name_F_ind(f,1),1:mf.name_F_len(f,1)), '_MS_', num2str(mf.index_F(d,1)), ...
-			mf.format_cell_number(mf.format_cell_number_ind(f,1),:), '_', mf.time_now, '.pdf')));
-		delete(fh_MS);
-	end
+			% Make options structure
+			info = struct( ...
+				'name',		mf.name_F(mf.name_F_ind(f,1),1:mf.name_F_len(f,1)), ...
+				'target_dir',	target_dir, ...
+				't',		mf.t(1:mf.data_len(f,1), mf.t_ind(f,1)), ...
+				't_sim',	mf.t_sim(1:mf.data_sim_len(f,1), mf.t_sim_ind(f,1)), ...
+				't_unit',	mf.t_unit, ...
+				'data',		mf.data(1:mf.data_len(f,1),d), ...
+				'data_sim',	mf.data_sim(1:mf.data_sim_len(f,1), d), ...
+				'noise',	mf.min_val(d,1) + mf.noise(f,1), ...
+				'params',	mf.params(d, 1:mf.par_num(f,1)), ...
+				't_event',	mf.t_event(d,1), ...
+				'fit_type',	mf.fit_type(d,1), ...
+				'rising_edge_xoff',		mf.rising_edge_xoff(d,1), ...
+				'rising_edge_yoff',		mf.rising_edge_yoff(d,1), ...
+				'rising_edge_scale',	mf.rising_edge_scale(d,1), ...
+				'falling_edge_xoff',	mf.falling_edge_xoff(d,1), ...
+				'falling_edge_yoff',	mf.falling_edge_yoff(d,1), ...
+				'falling_edge_scale',	mf.falling_edge_scale(d,1), ...
+				'index',				mf.index_F(d,1), ...
+				'marker',				model.marker, ...
+				'format_cell_number',	mf.format_cell_number(mf.format_cell_number_ind(f,1),:), ...
+				'time_now',				mf.time_now ...
+				);
 
-	% Plot the fitting result
-	if outmode.single
-		fh = figure('Visible','off');
-		plot( mf.t( 1:mf.data_len(f,1), mf.t_ind(f,1) ), ...
-				mf.data( 1:mf.data_len(f,1), d ), 'b-', ...
-			mf.t_sim( 1:mf.data_sim_len(f,1), mf.t_sim_ind(f,1) ), ...
-				mf.data_sim( 1:mf.data_sim_len(f,1), d ), 'r-' ...
-			);
-		title([model.marker ' Fluorescence in Cell ' num2str(mf.index_F(d,1))]);
-		xlabel(['Time ' mf.t_unit]); ...
-			xlim([0,max( mf.t( 1:mf.data_len(f,1), mf.t_ind(f,1) ) )]);
-		ylabel('Fluorescence Intensity [a.u.]');
-		set(fh, 'PaperUnits','centimeters', 'PaperSize',[10 7], 'PaperPosition',[0 0 10 7])
-		print(fh, '-dpdf', fullfile(target_dir, ...
-			strcat( mf.name_F(mf.name_F_ind(f,1),1:mf.name_F_len(f,1)), '_FIT_', num2str( ...
-			mf.index_F(d,1), mf.format_cell_number(mf.format_cell_number_ind(f,1), :) ), ...
-			'_', mf.time_now, '.pdf' ) ));
-		delete(fh);
+			if mf.fit_parabola_ind(d,1)
+				info.fit_parabola = mf.fit_parabola(1:mf.data_sim_len(f,1), mf.fit_parabola_ind(d,1));
+			else
+				info.fit_parabola = NaN(mf.data_sim_len(f,1), 1);
+			end
+
+			% Print postprocessing results
+			plot_postproc(info);
+		end
+
+		% Plot the multistart results
+		if outmode.ms && mf.fh_MS_ind(d,1) && isgraphics(mf.fh_MS(mf.fh_MS_ind(d,1),1))
+			fh_MS = mf.fh_MS(mf.fh_MS_ind(d,1),1);
+			set(fh_MS, 'PaperUnits','centimeters', 'PaperSize',[25 15], 'PaperPosition',[0 0 25 15])
+			print(fh_MS, '-dpdf', fullfile(target_dir, ...
+				strcat(mf.name_F(mf.name_F_ind(f,1),1:mf.name_F_len(f,1)), '_MS_', num2str(mf.index_F(d,1)), ...
+				mf.format_cell_number(mf.format_cell_number_ind(f,1),:), '_', mf.time_now, '.pdf')));
+			delete(fh_MS);
+		end
+
+		% Plot the fitting result
+		if outmode.single
+			fh = figure('Visible','off');
+			plot( mf.t( 1:mf.data_len(f,1), mf.t_ind(f,1) ), ...
+					mf.data( 1:mf.data_len(f,1), d ), 'b-', ...
+				mf.t_sim( 1:mf.data_sim_len(f,1), mf.t_sim_ind(f,1) ), ...
+					mf.data_sim( 1:mf.data_sim_len(f,1), d ), 'r-' ...
+				);
+			title([model.marker ' Fluorescence in Cell ' num2str(mf.index_F(d,1))]);
+			xlabel(['Time ' mf.t_unit]); ...
+				xlim([0,max( mf.t( 1:mf.data_len(f,1), mf.t_ind(f,1) ) )]);
+			ylabel('Fluorescence Intensity [a.u.]');
+			set(fh, 'PaperUnits','centimeters', 'PaperSize',[10 7], 'PaperPosition',[0 0 10 7])
+			print(fh, '-dpdf', fullfile(target_dir, ...
+				strcat( mf.name_F(mf.name_F_ind(f,1),1:mf.name_F_len(f,1)), '_FIT_', num2str( ...
+				mf.index_F(d,1), mf.format_cell_number(mf.format_cell_number_ind(f,1), :) ), ...
+				'_', mf.time_now, '.pdf' ) ));
+			delete(fh);
+		end
 	end
 end
 
 %% Plot the whole dataset
-for f = first_file_index:ndatafiles
+if first_file_index <= ndatafiles
+	for f = first_file_index:ndatafiles
 
-	% Write log file
-	write_plot_log(sprintf('Plotting file: %d\n', f));
+		% Write log file
+		write_plot_log(sprintf('Plotting file: %d\n', f));
 
-	% Get data from matfile
-	model = mf.models(mf.model_ind(f,1),1);
+		% Get data from matfile
+		model = mf.models(mf.model_ind(f,1),1);
 
-	% Ensure that target directory exists
-	target_dir = mf.target_dir(mf.target_dir_ind(f,1),1:mf.target_dir_len(f,1));
-	if ~exist(target_dir, 'dir')
-		mkdir(target_dir);
-	end
-
-	% Write status matrix to file
-	if outmode.states
-		stat_mat = zeros(mf.size_F(f,1), 7);
-
-		for i = mf.dataindices(f, 1:mf.size_F(f,1))
-			j = mf.index_F(i,1);
-			%% Write status matrix row:
-			%	1st column: cell number
-			%	2nd column: event time
-			%	3rd column: absolute amplitude
-			%	4th column: relative amplitude
-			%	5th column: log-likelihood
-			%	6th column: fit_type (one of the following)
-			%				1:	extrapol_rising
-			%				2:	kink_parabola
-			%				-2:	nokink_parabola
-			%				3: mRNA transfection
-			%				4: min between peaks
-			%				5: interactive TMRM fit
-			%				-5: interactive TMRM fit (manual adjustment)
-			%				other: currently not defined
-			%	7th column: event slope
-			stat_mat(j,1) = mf.index_F(i,1);
-			stat_mat(j,2) = mf.t_event(i,1);
-			stat_mat(j,3) = mf.amplitude(i,1);
-			stat_mat(j,4) = mf.amplitude(i,1) / mf.amp_max(f,1);
-			stat_mat(j,5) = mf.logPost(i,1);
-			stat_mat(j,6) = mf.fit_type(i,1);
-			stat_mat(j,7) = mf.event_deriv(i,1);
+		% Ensure that target directory exists
+		target_dir = mf.target_dir(mf.target_dir_ind(f,1),1:mf.target_dir_len(f,1));
+		if ~exist(target_dir, 'dir')
+			mkdir(target_dir);
 		end
 
-		csvwrite( fullfile(target_dir, ...
-			strcat(mf.name_F( mf.name_F_ind(f,1),1:mf.name_F_len(f,1)), '_ALL_STATE_', mf.time_now, '.csv' ) ), ...
-			stat_mat );
-	end
+		% Check if file is empty (needed for avoiding indexing errors)
+		is_file_empty = mf.size_F(f, 1) == 0;
 
-	% Calculate parameters and simulated values
-	if outmode.params
+		% Write status matrix to file
+		if outmode.states
+			stat_mat = zeros(mf.size_F(f,1), 7);
 
-		% Allocate parameter matrix
-		par_mat = NaN(mf.size_F(f,1), model.par_num, 'single');
+			if ~is_file_empty
+				for i = mf.dataindices(f, 1:mf.size_F(f,1))
+					j = mf.index_F(i,1);
+					%% Write status matrix row:
+					%	1st column: cell number
+					%	2nd column: event time
+					%	3rd column: absolute amplitude
+					%	4th column: relative amplitude
+					%	5th column: log-likelihood
+					%	6th column: fit_type (one of the following)
+					%				1:	extrapol_rising
+					%				2:	kink_parabola
+					%				-2:	nokink_parabola
+					%				3: mRNA transfection
+					%				4: min between peaks
+					%				5: interactive TMRM fit
+					%				-5: interactive TMRM fit (manual adjustment)
+					%				other: currently not defined
+					%	7th column: event slope
+					stat_mat(j,1) = mf.index_F(i,1);
+					stat_mat(j,2) = mf.t_event(i,1);
+					stat_mat(j,3) = mf.amplitude(i,1);
+					stat_mat(j,4) = mf.amplitude(i,1) / mf.amp_max(f,1);
+					stat_mat(j,5) = mf.logPost(i,1);
+					stat_mat(j,6) = mf.fit_type(i,1);
+					stat_mat(j,7) = mf.event_deriv(i,1);
+				end
+			end
 
-		% Populate parameter matrix from matfile
-		for i = 1:mf.size_F(f,1)
-			par_mat(i,:) = mf.params(mf.dataindices(f,i), 1:model.par_num);
+			csvwrite( fullfile(target_dir, ...
+				strcat(mf.name_F( mf.name_F_ind(f,1),1:mf.name_F_len(f,1)), '_ALL_STATE_', mf.time_now, '.csv' ) ), ...
+				stat_mat );
 		end
 
-		% Export the parameter matrix
-		csvwrite(fullfile(target_dir, ...
-			strcat(mf.name_F(mf.name_F_ind(f,1),1:mf.name_F_len(f,1)), '_ALL_PARAMS_', mf.time_now, '.csv')), par_mat);
-		clear par_mat;
-	end
+		% Calculate parameters and simulated values
+		if outmode.params
 
-	% Write simulated values
-	if outmode.simulated
-		csvwrite(fullfile( target_dir, ...
-				strcat( mf.name_F(mf.name_F_ind(f,1),1:mf.name_F_len(f,1)), '_ALL_SIMULATED_', mf.time_now, '.csv' ) ...
-			), ...
-			[	mf.t_sim( 1:mf.data_sim_len(f,1), mf.t_sim_ind(f,1) ), ...
-				mf.data_sim( 1:mf.data_sim_len(f,1), mf.dataindices(f,1:mf.size_F(f,1)) ) ...
-			]);
-	end
+			% Allocate parameter matrix
+			par_mat = NaN(mf.size_F(f,1), model.par_num, 'single');
 
-	% Plot whole datafile
-	if outmode.total
-		fh = figure('Visible','off');
-		col_map = colormap(fh, jet(double(mf.size_F(f,1))));
+			% Populate parameter matrix from matfile
+			for i = 1:mf.size_F(f,1)
+				par_mat(i,:) = mf.params(mf.dataindices(f,i), 1:model.par_num);
+			end
 
-		for i = 1:mf.size_F(f,1)
-			plot( mf.t(1:mf.data_len(f,1), mf.t_ind(f,1)), ...
-				mf.data(1:mf.data_len(f,1), mf.dataindices(f,i) ), ...
-				'-', 'linewidth',1, 'color',col_map(i,:) );
-			hold on;
-			plot( mf.t_sim(1:mf.data_sim_len(f,1), mf.t_sim_ind(f,1)), ...
-				mf.data_sim(1:mf.data_sim_len(f,1), mf.dataindices(f,i)), ...
-				'-', 'linewidth',2, 'color',col_map(i,:));
+			% Export the parameter matrix
+			csvwrite(fullfile(target_dir, ...
+				strcat(mf.name_F(mf.name_F_ind(f,1),1:mf.name_F_len(f,1)), '_ALL_PARAMS_', mf.time_now, '.csv')), par_mat);
+			clear par_mat;
 		end
 
-		title([model.marker ' Fluorescence']);
-		xlim([ 0, max( mf.t(1:mf.data_len(f,1), mf.t_ind(f,1)) ) ]);
-		xlabel([ 'Time ' mf.t_unit ]);
-		ylabel('Fluorescence Intensity [a.u.]');
-		set(fh, 'PaperUnits','centimeters', 'PaperSize',[25 14], ...
-			'PaperPosition',[0 0 25 14], 'PaperPositionMode','manual');
-		print(fh, '-dpdf', fullfile( target_dir, ...
-			strcat(mf.name_F(mf.name_F_ind(f,1),1:mf.name_F_len(f,1)), '_ALL_FIT_', mf.time_now, '.pdf')));
-		delete(fh);
+		% Write simulated values
+		if outmode.simulated
+			simulated_path = fullfile(target_dir, strcat(mf.name_F(mf.name_F_ind(f, 1), ...
+				1:mf.name_F_len(f, 1)), '_ALL_SIMULATED_', mf.time_now, '.csv' ));
+			simulated_tab = mf.t_sim(1:mf.data_sim_len(f, 1), mf.t_sim_ind(f, 1));
+			if ~is_file_empty
+				simulated_tab = [simulated_tab, ...
+					mf.data_sim(1:mf.data_sim_len(f, 1), mf.dataindices(f, 1:mf.size_F(f, 1)))];
+			end
+			csvwrite(simulated_path, simulated_tab);
+		end
+
+		% Plot whole datafile
+		if outmode.total
+			fh = figure('Visible','off');
+			col_map = colormap(fh, jet(double(mf.size_F(f,1))));
+
+			for i = 1:mf.size_F(f,1)
+				plot( mf.t(1:mf.data_len(f,1), mf.t_ind(f,1)), ...
+					mf.data(1:mf.data_len(f,1), mf.dataindices(f,i) ), ...
+					'-', 'linewidth',1, 'color',col_map(i,:) );
+				hold on;
+				plot( mf.t_sim(1:mf.data_sim_len(f,1), mf.t_sim_ind(f,1)), ...
+					mf.data_sim(1:mf.data_sim_len(f,1), mf.dataindices(f,i)), ...
+					'-', 'linewidth',2, 'color',col_map(i,:));
+			end
+
+			title([model.marker ' Fluorescence']);
+			xlim([ 0, max( mf.t(1:mf.data_len(f,1), mf.t_ind(f,1)) ) ]);
+			xlabel([ 'Time ' mf.t_unit ]);
+			ylabel('Fluorescence Intensity [a.u.]');
+			set(fh, 'PaperUnits','centimeters', 'PaperSize',[25 14], ...
+				'PaperPosition',[0 0 25 14], 'PaperPositionMode','manual');
+			print(fh, '-dpdf', fullfile( target_dir, ...
+				strcat(mf.name_F(mf.name_F_ind(f,1),1:mf.name_F_len(f,1)), '_ALL_FIT_', mf.time_now, '.pdf')));
+			delete(fh);
+		end
 	end
 end
 
